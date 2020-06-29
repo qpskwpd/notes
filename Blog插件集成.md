@@ -672,3 +672,38 @@ QUESTIONS AND SOLUTIONS
 
   
 
+### 部署过程
+
+使用mvn打包时遇到的错误
+
+```
+Fatal error compiling: invalid target release: 1.11 -> [Help 1]
+```
+
+```xml
+<plugin>                    
+	<groupId>org.apache.maven.plugins</groupId>                    
+	<artifactId>maven-compiler-plugin</artifactId>                    						<version>3.8.1</version>                    
+	<configuration>                        
+		<source>11</source>                        
+		<target>11</target>                        	                   						</configuration>                
+</plugin>
+```
+
+
+
+
+```
+Cause: java.sql.SQLSyntaxErrorException: Table 'xxx' doesn't exist
+```
+
+其实是因为
+
+```
+jpa:
+  hibernate:
+    ddl-auto: none
+```
+
+开发环境不希望表结构发生变化，但没有创建表之前这个选项不能为none，应该先使用create、update等运行一次创建表之后再改回none。
+

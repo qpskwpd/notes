@@ -48,6 +48,7 @@
 9. 修改密码 `ALTER USER 'root'@'localhost' IDENTIFIED BY 'Mysql@wpd222.com';`
 
 ### 开启远程访问
+
 `ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '密码';`
 
 `grant all privileges on 数据库名.表名 to '用户名' @'host名' identified by '密码';`
@@ -81,6 +82,21 @@
 2. 编译`make`
 
 3. 执行src中的两个文件即可
+
+
+
+### 安装Maven
+
+1. 解压
+
+2. 配置环境变量，编辑/etc/profile
+
+   ```
+   export MAVEN_HOME=/usr/local/maven/apache-maven-3.6.3
+   export PATH=$MAVEN_HOME/bin:$PATH
+   ```
+
+3. source /etc/profile
 
 
 

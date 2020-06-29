@@ -8,7 +8,7 @@ CURDATE()以’YYYY-MM-DD’的格式返回今天的日期，可以直接存到D
 CURTIME()以’HH:MM:SS’的格式返回当前的时间，可以直接存到TIME字段中。
 ```
 
-时间格式函数
+##### 时间格式函数
 
 ```sql
 SELECT DATE_FORMAT(update_time, '%Y') FROM t_blog;
@@ -22,6 +22,5 @@ SELECT DATE_FORMAT(update_time, '%y') FROM t_blog;
 %d：01，5
 %H：7，19
 %h：7，7
-
 ```
 
