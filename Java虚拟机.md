@@ -692,19 +692,19 @@ Java堆和方法区具有不确定性，如一个接口的多个实现类需要�
   
   - 概览：
   
-    <img src="G:\2019黑马Java(IDEA)\md\img\java虚拟机\jvm_case\jconsole_概览.jpg" style="zoom:50%;" />
+    <img src="img\java虚拟机\jvm_case\jconsole_概览.jpg" style="zoom:50%;" />
     
   - 内存页：
   
-    <img src="G:\2019黑马Java(IDEA)\md\img\java虚拟机\jvm_case\jconsole_内存.jpg" style="zoom:50%;" />
+    <img src="img\java虚拟机\jvm_case\jconsole_内存.jpg" style="zoom:50%;" />
   
   - 线程：
   
-    <img src="G:\2019黑马Java(IDEA)\md\img\java虚拟机\jvm_case\jconsole_main线程.jpg" style="zoom:50%;" />
+    <img src="img\java虚拟机\jvm_case\jconsole_main线程.jpg" style="zoom:50%;" />
   
     - runnable状态，readBytes方法等待输入，但检测到没有输入流时归还执行令牌。
   
-    <img src="G:\2019黑马Java(IDEA)\md\img\java虚拟机\jvm_case\jconsole_busy线程.jpg" style="zoom:50%;" />
+    <img src="img\java虚拟机\jvm_case\jconsole_busy线程.jpg" style="zoom:50%;" />
     
     - runnable状态，但执行死循环。
     
@@ -1203,24 +1203,20 @@ Java堆和方法区具有不确定性，如一个接口的多个实现类需要�
                  8    13    17   any
                 17    19    17   any
       ```
-    ```
       
-    可以看出finally中的return应该是会覆盖掉其他块的return，在return前的两条指令都发生了变化，取出来的值都是finally中新赋的值，但具体的指令还是不太懂。
+      可以看出finally中的return应该是会覆盖掉其他块的return，在return前的两条指令都发生了变化，取出来的值都是finally中新赋的值，但具体的指令还是不太懂。
       
-    学完指令后：
-      
-    ```
-      正常流程：
+      学完指令后：
+    
+    	```
+    正常流程：
     栈：x=1	x=3->返回
       局部变量槽：x=1->x=3	x=1
       异常流程，假设第4条指令x=3处出现异常：
       栈：x=1	x=2		x=3->返回
     局部变量槽：x=1->x=2->x=3	x=1->异常对象	x=2
       出现了其他类型的异常，可以看出存了一个异常对象，将变量槽1的x修改为3，然后将变量槽1的值加载到操作数栈返回。
-    
-    ```
-    
-    ```
+  	  ```
   
 - Exceptions属性：列举出方法中可能抛出的受查异常，即方法描述时throws关键字后面列举的异常。结构为
   
@@ -3097,18 +3093,20 @@ public void onlyMe(TestClass f){
       - 只需要基础的同步功能时，synchronized更加清晰简单。
 
       - Lock应该由程序员确保在finally块中释放锁，synchronized由虚拟机确保自动释放。
-
-    ```java
-  package cn.dut.test;
     
-  public class VolatileTest {
+    ```java
+    package cn.dut.test;
+    
+    public class VolatileTest {
         public static volatile int race = 0;
+    
         public static void increase() {
-            synchronized (VolatileTest.class){
+            synchronized (VolatileTest.class) {
                 race++;
             }
         }
-        private static final int THREADS_COUNT=20;
+    
+        private static final int THREADS_COUNT = 20;
     
         public static void main(String[] args) {
             Thread[] threads = new Thread[THREADS_COUNT];
@@ -3126,15 +3124,15 @@ public void onlyMe(TestClass f){
     
             while (Thread.activeCount() > 2)
                 Thread.yield();
-            System.out.println(race);//200000
+            System.out.println(race);//00000
         }
-    }
+    }  
     ```
   
   - 非阻塞同步：基于冲突检测的乐观并发策略，不管风险先进行操作，如果没有其他线程争用共享数据，那操作就成功了，如果共享数据被争用，那就进行其他的补偿措施。这种不需要把线程阻塞挂起的同步操作称为非阻塞同步。
-  
+
     - 需要硬件保证某些语义上需要多次操作的行为可以通过一条处理器指令就能完成，如测试并设置（Test-and-Set）、获取并增加（Fetch-and-Increment）、交换（Swap）、比较并交换（Compare-and-Swap，CAS）、加载链接/条件存储（Load-Linked/Store-Conditional，LL/SC）。
-    
+
     ```java
     package cn.dut.test;
     
@@ -3169,15 +3167,15 @@ public void onlyMe(TestClass f){
         }
     }
     ```
-    
+
   - 无同步方案：同步只是保障存在共享数据争用时正确性的手段，如果能让一个方法本来就不涉及共享数据，那它自然就不需要任何同步措施去保证其正确性。
-  
+
     - 可重入代码/纯代码：可以在代码执行的任何时刻中断它，转而去执行另外一段代码，而在控制权返回后，原来的程序不会出现任何错误，也不会对结果有所影响。
-  
+      
       特征：不依赖全局变量、存储在堆上的数据和公用的系统资源，用到的状态量都由参数中传入，不调用非可重用的方法等。
-  
+      
       具备可重用性：如果一个方法的返回结果是可以预测的，只要输入了相同的数据，就能返回相同的结果。
-  
+      
     - 线程本地存储：如果一段代码中所需要的数据必须与其他代码共享，那就尽量使这些共享数据的代码在同一个线程中执行。通过java.lang.ThreadLocal类实现线程本地存储。
 
 ##### 13.3 锁优化
@@ -3188,11 +3186,13 @@ public void onlyMe(TestClass f){
   - JDK6中引入了自适应的自旋，由前一次在同一个锁上的自旋时间及锁的拥有者的状态来决定的。如果在同一个锁对象上，自旋等待刚刚成功获得过锁，并且持有锁的线程正在运行中，那虚拟机就会认为这次自旋也很有可能成功，进而允许自旋等待持续更长时间。如果对于某个锁，自旋很少成功获得过锁，那以后获取这个锁时就可能直接省略掉自旋过程。
 
 - 锁消除
+  
   - 虚拟机即时编译器在运行时，对一些代码要求同步，但是对被检测到不可能存在共享数据竞争的锁进行消除。依赖于逃逸分析，如果判断到一段代码中堆上的所有数据都不会被其他线程访问到，那就无需同步加锁。
-
+  
 - 锁粗化
+  
   - 如果一串零碎的操作都对同一个对象加锁，将会把加锁同步的范围扩展到整个操作序列的外部。
-
+  
 - 轻量级锁
 
   - 对象头Mark Word（32位示例）：

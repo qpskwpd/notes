@@ -707,3 +707,28 @@ jpa:
 
 开发环境不希望表结构发生变化，但没有创建表之前这个选项不能为none，应该先使用create、update等运行一次创建表之后再改回none。
 
+
+
+创建博客写入内容时
+
+```java
+org.springframework.dao.DataIntegrityViolationException: could not execute statement; SQL [n/a]; nested exception is org.hibernate.exception.DataException: could not execute statement
+Data truncation: Incorrect string value: '\xE6\xB5\x8B\xE8\xAF\x95' for column 'content' at row 1
+```
+
+这是因为数据库的编码问题，database和server的编码方式与其他几个不同。实际上连接数据库的时候指定了编码格式，本地好用，但Linux下不好用，可能与MariaDB有关?
+
+<img src="img/blog/数据库编码问题.png" style="zoom:50%;" />
+
+进入/etc/my.cnf。
+
+在[mysqld]标签下添加：`character-set-server=utf8`；增加一个`[client]`标签，并且在`[client]`标签下添加：`default-character-set=utf8`。
+
+重启数据库服务，`systemctl restart mariadb.service`。
+
+
+
+保存功能其实没有做，因为管理（不需要管有没有发布）和展示（只展示发布的）的controller共用一套service和repository中的一些方法，除非对这些方法作出区分，否则只能在页面上通过判断published状态进行展示，但总记录条数又不是很好处理，尤其是top分类下每个分类的记录条数，显示的时候是用type对象中blogs属性的size，这个size与发布还是保存无关，虽然使用SQL可以查询出分类对应的发布的博客数，但是实体类中没有保存该数据的字段，总体而言可以做但稍复杂。
+
+
+
