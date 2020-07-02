@@ -287,7 +287,7 @@
 
   ```java
   class Solution {
-      public ListNode removeNthFromEnd(ListNode head, int n) {
+      public ListNode removeNthFromEnd(ListNode head, int n) {//注意给定的n是有效的
           ListNode dummy = new ListNode(0);
           dummy.next = head;
           ListNode h1 = dummy, h2 = dummy;
@@ -302,6 +302,68 @@
   采用哑节点处理第一个节点的删除。
 
   双指针，两个指针初始时均指向哑节点，指针2先移动n+1个位置，然后开始同时移动两个指针，直到指针2为空，此时指针1指向的就是要删除的节点的前一个节点。
+
+##### q61 旋转链表
+
+```java
+给定一个链表，旋转链表，将链表每个节点向右移动 k 个位置，其中 k 是非负数。
+
+示例 1:
+
+输入: 1->2->3->4->5->NULL, k = 2
+输出: 4->5->1->2->3->NULL
+解释:
+向右旋转 1 步: 5->1->2->3->4->NULL
+向右旋转 2 步: 4->5->1->2->3->NULL
+
+
+示例 2:
+
+输入: 0->1->2->NULL, k = 4
+输出: 2->0->1->NULL
+解释:
+向右旋转 1 步: 2->0->1->NULL
+向右旋转 2 步: 1->2->0->NULL
+向右旋转 3 步: 0->1->2->NULL
+向右旋转 4 步: 2->0->1->NULL
+```
+
+- 原始解法
+
+  ```java
+  /**
+   * Definition for singly-linked list.
+   * public class ListNode {
+   *     int val;
+   *     ListNode next;
+   *     ListNode(int x) { val = x; }
+   * }
+   */
+  class Solution {
+      public ListNode rotateRight(ListNode head, int k) {
+          if(head==null) return null;
+          ListNode l = head;
+          int len = 0;
+          while(l.next != null) {
+              len++;
+              l = l.next;
+          }
+          len++;
+          l.next = head;
+          l = head;
+          for(int i=0; i<len-k%len-1; i++){
+              l = l.next;
+          }
+          head = l.next;
+          l.next = null;
+          return head;
+      }
+  }
+  ```
+
+  思路为先记录链表长度，并且将最后一个节点指向头节点形成一个环。然后类似于删除倒数第N个节点，找到倒数第k个节点的前一个节点，把头节点指向它的下一个节点，而它指向null即设为尾节点即可。
+
+  因为输入的k可能超过链表的长度，因此在得知链表长度之前无法使用双指针，那双指针也就没有必要了。
 
 #### 动态规划：求最值
 
@@ -769,4 +831,286 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
       }
   ```
 
-  
+
+#### 滑动窗口（双指针）：多为给出两个字符串的问题
+
+基本解题套路见[labuladong](https://labuladong.gitbook.io/algo/di-ling-zhang-bi-du-xi-lie/hua-dong-chuang-kou-ji-qiao-jin-jie)。
+
+##### q19 删除链表的倒数第N个节点
+
+##### q76 最小覆盖字串
+
+```
+给你一个字符串 S、一个字符串 T，请在字符串 S 里面找出：包含 T 所有字符的最小子串。
+
+示例：
+输入: S = "ADOBECODEBANC", T = "ABC"
+输出: "BANC"
+
+说明：
+	如果 S 中不存这样的子串，则返回空字符串 ""。
+	如果 S 中存在这样的子串，我们保证它是唯一的答案。
+```
+
+```java
+class Solution {
+    public String minWindow(String s, String t) {
+        int[] needs = new int[128];
+        int[] window = new int[128];
+
+        for(char c : t.toCharArray()) {
+            needs[c]++;
+        }
+
+        String res = "";
+        int left = 0, right = 0;
+
+        while(right < s.length()) {
+            char c = s.charAt(right);
+            window[c]++;
+            right++;
+            while (contains(needs, window)) {
+                if ("".equals(res))
+                    res = s.substring(left, right);
+                else
+                    res = res.length() < (right-left) ? res : s.substring(left, right);
+                char d = s.charAt(left);
+                window[d]--;
+                left++;
+            }
+        }
+        return res;
+    }
+
+    public boolean contains(int[] needs, int[] window) {
+        for(int i=65; i<needs.length; i++)
+            if(window[i]<needs[i])
+                return false;
+        return true;
+    }
+}
+```
+
+```java
+class Solution {
+    public String minWindow(String s, String t) {
+        Map<Character, Integer> needs = new HashMap<>();
+        Map<Character, Integer> window = new HashMap<>();
+
+        for(char c : t.toCharArray()) {
+            put(needs, c);
+        }
+
+        String res = "";
+        int left = 0, right = 0;
+        int valid = 0;
+
+        while(right < s.length()) {
+            char c = s.charAt(right);
+            put(window, c);
+            if(needs.containsKey(c))
+                if(needs.get(c).equals(window.get(c)))
+                    valid++;
+            right++;
+            while (valid == needs.size()) {
+                if ("".equals(res))
+                    res = s.substring(left, right);
+                else
+                    res = res.length() < (right-left) ? res : s.substring(left, right);
+                c = s.charAt(left);
+                if(needs.containsKey(c))
+                    if(needs.get(c).equals(window.get(c)))
+                        valid--;
+                window.put(c, window.get(c) - 1);  
+                left++;
+            }
+        }
+        return res;
+    }
+
+    public void put(Map<Character, Integer> map, char c) {
+        if(map.containsKey(c))
+            map.put(c, map.get(c) + 1);
+        else
+            map.put(c, 1);
+    }
+}
+```
+
+- 用数组操作相对方便，Map的API较为繁琐。
+
+##### q567 字符串的排列
+
+```
+给定两个字符串 s1 和 s2，写一个函数来判断 s2 是否包含 s1 的排列。
+换句话说，第一个字符串的排列之一是第二个字符串的子串。
+
+示例1:
+输入: s1 = "ab" s2 = "eidbaooo"
+输出: True
+解释: s2 包含 s1 的排列之一 ("ba").
+
+示例2:
+输入: s1= "ab" s2 = "eidboaoo"
+输出: False
+
+注意：
+	输入的字符串只包含小写字母
+	两个字符串的长度都在 [1, 10,000] 之间
+```
+
+```java
+class Solution {
+    public boolean checkInclusion(String s1, String s2) {
+        int[] needs = new int[26];
+        int[] window = new int[26];
+
+        for (char c : s1.toCharArray())
+            needs[c-'a']++;
+        
+        int left = 0, right = 0;
+        
+        while(right < s2.length()) {
+            char c = s2.charAt(right);
+            window[c-'a']++;
+            right++;
+            while(contains(needs, window)) {//这里的条件可以优化为right - left >= s1.length()
+                if (onlycontains(needs, window))
+                    return true;
+                char d = s2.charAt(left);
+                window[d-'a']--;
+                left++;
+            }
+        }
+        return false;
+    }
+    public boolean contains(int[] needs, int[] window) {
+        for (int i=0; i<needs.length; i++)
+            if (window[i]<needs[i])
+                return false;
+        return true;
+    }
+    public boolean onlycontains(int[] needs, int[] window) {
+        for (int i=0; i<needs.length; i++)
+            if (window[i] != needs[i])
+                return false;
+        return true;
+    }
+}
+```
+
+##### q438 找到字符串中所有字母异位词
+
+```
+给定一个字符串 s 和一个非空字符串 p，找到 s 中所有是 p 的字母异位词的子串，返回这些子串的起始索引。
+字符串只包含小写英文字母，并且字符串 s 和 p 的长度都不超过 20100。
+
+说明：
+	字母异位词指字母相同，但排列不同的字符串。
+	不考虑答案输出的顺序。
+
+示例 1:
+输入:
+s: "cbaebabacd" p: "abc"
+输出:
+[0, 6]
+解释:
+起始索引等于 0 的子串是 "cba", 它是 "abc" 的字母异位词。
+起始索引等于 6 的子串是 "bac", 它是 "abc" 的字母异位词。
+
+示例 2:
+输入:
+s: "abab" p: "ab"
+输出:
+[0, 1, 2]
+解释:
+起始索引等于 0 的子串是 "ab", 它是 "ab" 的字母异位词。
+起始索引等于 1 的子串是 "ba", 它是 "ab" 的字母异位词。
+起始索引等于 2 的子串是 "ab", 它是 "ab" 的字母异位词。
+```
+
+```java
+class Solution {
+    public List<Integer> findAnagrams(String s, String p) {
+        int[] needs = new int[26];
+        int[] window = new int[26];
+        for(char c : p.toCharArray())
+            needs[c-'a']++;
+        
+        int left = 0, right = 0;
+        List<Integer> res = new ArrayList<>();
+
+        while(right < s.length()) {
+            char c = s.charAt(right);
+            window[c-'a']++;
+            right++;
+            while (right - left >= p.length()) {
+                if(onlycontains(needs, window))
+                    res.add(left);
+                char d = s.charAt(left);
+                window[d-'a']--;
+                left++;    
+            }
+        }
+        return res;
+    }
+    public boolean onlycontains(int[] needs, int[] window) {
+        for(int i=0; i<needs.length; i++)
+            if (needs[i] != window[i])
+                return false;
+        return true;
+    }
+}
+```
+
+- 可以看到滑动窗口的模板代码非常明显，基本上只有缩小window时需要做的操作就是完成题目的操作。
+
+##### q3 无重复字符的最长子串
+
+```
+给定一个字符串，请你找出其中不含有重复字符的 最长子串 的长度。
+
+示例 1:
+输入: "abcabcbb"
+输出: 3 
+解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
+
+
+示例 2:
+输入: "bbbbb"
+输出: 1
+解释: 因为无重复字符的最长子串是 "b"，所以其长度为 1。
+
+
+示例 3:
+输入: "pwwkew"
+输出: 3
+解释: 因为无重复字符的最长子串是 "wke"，所以其长度为 3。
+     请注意，你的答案必须是 子串 的长度，"pwke" 是一个子序列，不是子串。
+```
+
+```java
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        int[] window = new int[128];
+
+        int left = 0, right = 0;
+        int res = 0;
+
+        while(right < s.length()) {
+            char c = s.charAt(right);
+            window[c]++;
+            right++;
+            while(window[c] > 1) {//只要存在重复字符就缩小窗口
+                char d = s.charAt(left);
+                window[d]--;
+                left++;
+            }
+            res = Math.max(res, right - left);//窗口缩小完毕后一定没有重复字符，更新结果
+        }
+        return res;
+    }
+}
+```
+
+- 基本模板没变，可以看到滑动窗口类型的问题关键在于缩小窗口的判定条件，以及如何获得结果，在哪个位置更新结果（缩小窗口时还是缩小窗口后）。

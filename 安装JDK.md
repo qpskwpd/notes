@@ -1,4 +1,6 @@
-### 安装JDK
+### JDK
+
+#### 安装JDK
 
 1. 解压JDK至`/usr/local/jdk`
 
@@ -17,17 +19,19 @@
 4. 查看版本信息
     `java -version`
 
-### 查看已安装JDK信息
+#### 查看已安装JDK信息
 
   	`rpm -qa | grep java`
 
-### 删除JDK
+#### 删除JDK
 
   	`rpm -e -nodeps 查询的jdk信息`
 
 
 
-### 安装MySQL
+### MySQL
+
+#### 安装MySQL
 
 1.  解压MySQL包
 
@@ -39,7 +43,7 @@
 
 5.  `rpm -ivh mysql-community-server-8.0.20-1.el8.x86_64.rpm` 
 
-6. 启动`mysql service mysqld start`
+6. 启动 `service mysqld start`
 
 7. 查找初始密码 `cat /var/log/mysqld.log`
 
@@ -47,7 +51,7 @@
 
 9. 修改密码 `ALTER USER 'root'@'localhost' IDENTIFIED BY 'Mysql@wpd222.com';`
 
-### 开启远程访问
+#### 开启远程访问
 
 `ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '密码';`
 
@@ -55,7 +59,7 @@
 
 - 创建账户
 
-  `create user 'root'@'172.16.10.203' identified by  'password'`
+  `create user 'root'@'172.16.10.203' identified by 'password'`
 
 - 赋予权限，with grant option这个选项表示该用户可以将自己拥有的权限授权给别人
   `grant all privileges on *.* to 'root'@'172.16.10.203' with grant option`
@@ -69,49 +73,42 @@
 
 
 
-### Tomcat资源部署
-
-将war包放入webapps目录下
-
-
-
-### 安装Redis
+### Redis
 
 1. 解压redis包
-
 2. 编译`make`
+3. 安装`make install`
+4. 执行src中的两个文件即可
 
-3. 执行src中的两个文件即可
 
 
-
-### 安装Maven
+### Maven
 
 1. 解压
 
-2. 配置环境变量，编辑/etc/profile
+2. 配置环境变量，编辑`/etc/profile`
 
    ```
    export MAVEN_HOME=/usr/local/maven/apache-maven-3.6.3
    export PATH=$MAVEN_HOME/bin:$PATH
    ```
 
-3. source /etc/profile
+3. `source /etc/profile`
 
 
 
-### 安装Nginx
+### Nginx
+
+#### 安装Nginx
 
 1. 安装依赖包
 
    ```shell
    yum install -y pcre pcre-devel
-   
    yum install -y zlib zlib-devel
-   
    yum install -y openssl openssl-devel
    ```
-
+   
 2. 执行配置文件
 
    ```shell
@@ -130,18 +127,18 @@
 
 7. 停止 `./nginx -s stop或quit` 重新加载`./nginx -s reload`
 
-### Nginx部署静态资源
+#### Nginx部署静态资源
 
 1. 将资源目录放入nginx目录下
 2. 修改conf目录下nginx.conf中server部分
 
-### Nginx作为虚拟主机部署多个资源
+#### Nginx作为虚拟主机部署多个资源
 
 在conf目录下nginx.conf中添加新的server部分
 
 可通过端口方式/域名方式区分多个资源的访问路径
 
-### Nginx反向代理&负载均衡
+#### Nginx反向代理&负载均衡
 
     upstream tomcat-travel{
             server 192.168.208.200:8080 weight=2;#只能写到端口号,因此tomcat项目需要部署为ROOT
