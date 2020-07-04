@@ -27,3 +27,14 @@
 
    `git pull origin master`如果远程分支存在内容，需要先拉取到本地。
 
+### 从repository中下载某个文件夹
+
+1. 下载并安装TortoiseSVN
+
+2. 右键单击SVN checkout
+
+3. 将地址中的`/tree/master/`改为`/trunk/`
+
+   ![](img/git/下载项目中某个文件夹.png)
+
+   如果不是master分支 ， 假如是channel分支中的文件，只需将`/trunk/`换成：`/branches/channel/`

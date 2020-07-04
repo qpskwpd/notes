@@ -365,9 +365,187 @@
 
   因为输入的k可能超过链表的长度，因此在得知链表长度之前无法使用双指针，那双指针也就没有必要了。
 
+##### q138 复制带随机指针的链表
+
+```
+给定一个链表，每个节点包含一个额外增加的随机指针，该指针可以指向链表中的任何节点或空节点。
+要求返回这个链表的 深拷贝。 
+我们用一个由 n 个节点组成的链表来表示输入/输出中的链表。每个节点用一个 [val, random_index] 表示：
+	val：一个表示 Node.val 的整数。
+	random_index：随机指针指向的节点索引（范围从 0 到 n-1）；如果不指向任何节点，则为  null 。
+	
+示例 1：
+输入：head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
+输出：[[7,null],[13,0],[11,4],[10,2],[1,0]]
+
+示例 2：
+输入：head = [[1,1],[2,1]]
+输出：[[1,1],[2,1]]
+
+示例 3：
+输入：head = [[3,null],[3,0],[3,null]]
+输出：[[3,null],[3,0],[3,null]]
+
+示例 4：
+输入：head = []
+输出：[]
+解释：给定的链表为空（空指针），因此返回 null。
+
+提示：
+	-10000 <= Node.val <= 10000
+	Node.random 为空（null）或指向链表中的节点。
+	节点数目不超过 1000 。
+```
+
+- DFS解法
+
+  ```java
+  /*
+  // Definition for a Node.
+  class Node {
+      int val;
+      Node next;
+      Node random;
+  
+      public Node(int val) {
+          this.val = val;
+          this.next = null;
+          this.random = null;
+      }
+  }
+  */
+  
+  class Solution {
+      Map<Node, Node> visited = new HashMap<>();
+      public Node copyRandomList(Node head) {
+          if(head == null) return null;
+          if(visited.containsKey(head)) return visited.get(head);
+          Node node = new Node(head.val);
+          visited.put(head, node);
+          node.next = copyRandomList(head.next);
+          node.random = copyRandomList(head.random);
+          return node; 
+      }
+  }
+  ```
+
+  思路：因为带有随机指针，所以类似于图，可以考虑使用DFS来遍历图。需要一个散列表来记录访问情况，例如`Map<Node, Boolean>`，但这道题需要复制链表，因此可以将value设置成Node。对原链表遍历时如果访问过，那么直接返回该节点；如果没访问过，那就创建新节点，并将它设置为当前节点的值。这里进行节点连接的操作与二叉树的操作相同。
+
+  ```java
+  class Solution {
+      public Node copyRandomList(Node head) {
+          if(head == null) return null;
+          Map<Node, Node> visited = new HashMap<>();
+          Node h = head;
+          while(h!=null) {
+              visited.put(h, new Node(h.val));
+              h = h.next;
+          }
+          h = head;
+          Node node = visited.get(h);
+          while(h != null){
+              node.next = visited.get(h.next);
+              node.random = visited.get(h.random);
+              node = node.next;
+              h = h.next;
+          }
+          return visited.get(head); 
+      }
+  }
+  ```
+
+  思路：不使用DFS，但关键仍然是散列表。先用散列表记录节点对应情况，然后按顺序遍历原链表，在此过程中完成新链表的连接关系。
+
+##### q206 反转链表
+
+```
+反转一个单链表。
+
+示例:
+
+输入: 1->2->3->4->5->NULL
+输出: 5->4->3->2->1->NULL
+
+进阶:
+你可以迭代或递归地反转链表。你能否用两种方法解决这道题？
+```
+
+- 迭代
+
+  ```java
+  /**
+   * Definition for singly-linked list.
+   * public class ListNode {
+   *     int val;
+   *     ListNode next;
+   *     ListNode(int x) { val = x; }
+   * }
+   */
+  class Solution {
+      public ListNode reverseList(ListNode head) {
+          if (head == null || head.next == null) return head;
+          ListNode l1 = head;
+          ListNode l2 = head.next;
+          ListNode l3 = head.next.next;
+  
+          while(l2 != null) {
+              l2.next = l1;
+              l1 = l2;
+              l2 = l3;
+              if(l3 != null)
+                  l3 = l3.next;
+          }
+          head.next = null;
+          return l1;
+      }
+  }
+  ```
+  
+  更优雅的方法
+  
+```java
+  public ListNode reverseList(ListNode head) {
+      ListNode prev = null;
+      ListNode curr = head;
+      while (curr != null) {
+          ListNode nextTemp = curr.next;
+          curr.next = prev;
+          prev = curr;
+          curr = nextTemp;
+      }
+      return prev;
+  }
+```
+
+- 递归
+
+  ```java
+  class Solution {
+      public ListNode reverseList(ListNode head) {
+          if (head == null || head.next == null) return head;
+          ListNode p = reverseList(head.next);
+          head.next.next = head;
+          head.next = null;
+          return p;
+      }
+  }
+  ```
+
+  关键在于首先沿着链表延伸到最后一个节点，然后沿着递归树往回爬时更新连接，这个过程其实并没有用到返回的节点，因此最终返回的就是最后一个节点，也就是逆转后的头节点。
+
 #### 动态规划：求最值
 
 基本解题套路见[labuladong](https://labuladong.gitbook.io/algo/di-ling-zhang-bi-du-xi-lie/dong-tai-gui-hua-xiang-jie-jin-jie)。
+
+```
+# 初始化 base case
+dp[0][0][...] = base
+# 进行状态转移
+for 状态1 in 状态1的所有取值：
+    for 状态2 in 状态2的所有取值：
+        for ...
+            dp[状态1][状态2][...] = 求最值(选择1，选择2...)
+```
 
 ##### q322 零钱兑换
 
@@ -455,6 +633,19 @@
 #### 回溯问题：求所有可能情况
 
 基本解题套路见[labuladong](https://labuladong.gitbook.io/algo/di-ling-zhang-bi-du-xi-lie/hui-su-suan-fa-xiang-jie-xiu-ding-ban)。
+
+```
+result = []
+def backtrack(路径, 选择列表):
+    if 满足结束条件:
+        result.add(路径)
+        return
+
+    for 选择 in 选择列表:
+        做选择
+        backtrack(路径, 选择列表)
+        撤销选择
+```
 
 ##### q46 全排列
 
@@ -588,6 +779,37 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
 #### BFS：在图中求起点到终点的最短距离
 
 基本解题套路见[labuladong](https://labuladong.gitbook.io/algo/di-ling-zhang-bi-du-xi-lie/bfs-kuang-jia)。
+
+```
+// 计算从起点 start 到终点 target 的最近距离
+int BFS(Node start, Node target) {
+    Queue<Node> q; // 核心数据结构
+    Set<Node> visited; // 避免走回头路
+
+    q.offer(start); // 将起点加入队列
+    visited.add(start);
+    int step = 0; // 记录扩散的步数
+
+    while (q not empty) {
+        int sz = q.size();
+        /* 将当前队列中的所有节点向四周扩散 */
+        for (int i = 0; i < sz; i++) {
+            Node cur = q.poll();
+            /* 划重点：这里判断是否到达终点 */
+            if (cur is target)
+                return step;
+            /* 将 cur 的相邻节点加入队列 */
+            for (Node x : cur.adj())
+                if (x not in visited) {
+                    q.offer(x);
+                    visited.add(x);
+                }
+        }
+        /* 划重点：更新步数在这里 */
+        step++;
+    }
+}
+```
 
 ##### q111 二叉树的最小深度
 
@@ -831,10 +1053,25 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
       }
   ```
 
+#### 滑动窗口/双指针
 
-#### 滑动窗口（双指针）：多为给出两个字符串的问题
+滑动窗口多为给出两个字符串，一个是模版，需要在另一个中匹配的问题。
 
 基本解题套路见[labuladong](https://labuladong.gitbook.io/algo/di-ling-zhang-bi-du-xi-lie/hua-dong-chuang-kou-ji-qiao-jin-jie)。
+
+```
+int left = 0, right = 0;
+while (right < s.size()) {`
+    // 增⼤窗⼝
+    window.add(s[right]);
+    right++;
+    while (window needs shrink) {
+        // 缩⼩窗⼝
+        window.remove(s[left]);
+        left++;
+    }
+}
+```
 
 ##### q19 删除链表的倒数第N个节点
 
@@ -1114,3 +1351,256 @@ class Solution {
 ```
 
 - 基本模板没变，可以看到滑动窗口类型的问题关键在于缩小窗口的判定条件，以及如何获得结果，在哪个位置更新结果（缩小窗口时还是缩小窗口后）。
+
+##### q11 盛最多水的容器
+
+```
+给你 n 个非负整数 a1，a2，...，an，每个数代表坐标中的一个点 (i, ai) 。在坐标内画 n 条垂直线，垂直线 i 的两个端点分别为 (i, ai) 和 (i, 0)。找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。
+说明：你不能倾斜容器，且 n 的值至少为 2。
+
+图中垂直线代表输入数组 [1,8,6,2,5,4,8,3,7]。在此情况下，容器能够容纳水（表示为蓝色部分）的最大值为 49。
+
+示例：
+输入：[1,8,6,2,5,4,8,3,7]
+输出：49
+```
+
+- 暴力解法
+
+  对每个位置，向右遍历一遍剩余的位置。
+
+- 双指针
+
+  ```java
+  class Solution {
+      public int maxArea(int[] height) {
+          int left = 0, right = height.length-1, max = 0;
+          while(left < right) {
+              int area = Math.min(height[left], height[right]) * (right-left);
+              max = Math.max(max, area);
+              if(height[left] < height[right])
+                  left++;
+              else
+                  right--;
+          }
+          return max;
+      }
+  }
+  ```
+
+  不同于滑动窗口典型问题的两个指针都初始化为同一侧，这里从两侧开始往中间靠拢。关键是如何移动指针，两个位置上的高度谁小，谁就往中间靠拢。
+
+##### q15 三数之和
+
+```
+给你一个包含 n 个整数的数组 nums，判断 nums 中是否存在三个元素 a，b，c ，使得 a + b + c = 0 ？请你找出所有满足条件且不重复的三元组。
+
+注意：答案中不可以包含重复的三元组。
+
+示例：
+给定数组 nums = [-1, 0, 1, 2, -1, -4]，
+满足要求的三元组集合为：
+[
+  [-1, 0, 1],
+  [-1, -1, 2]
+]
+```
+
+- 不能用回溯法，因为题目要求不能重复。
+
+    ```java
+    class Solution {
+        List<List<Integer>> res = new ArrayList<>();
+        boolean[] visited;
+        public List<List<Integer>> threeSum(int[] nums) {
+            visited = new boolean[nums.length];
+            LinkedList<Integer> path = new LinkedList<>();
+            backtrack(path, nums);
+            return res;
+        }
+
+        private void backtrack(LinkedList<Integer> path, int[] nums) {
+            if(path.size() == 3 && sumIs0(path)){
+                res.add(new ArrayList(path));
+                return;
+            }
+            if(path.size() == 3)
+                return;
+            int n = nums.length;
+            for(int i=0; i<n; i++) {
+                if(visited[i]==true)
+                    continue;
+                path.add(nums[i]);
+                visited[i] = true;
+                backtrack(path, nums);
+                path.removeLast();
+                visited[i] = false;
+            }
+        }
+
+        private boolean sumIs0(LinkedList<Integer> path) {
+            int sum = 0;
+            for (int num : path) {
+                sum += num;
+            }
+            return sum == 0;
+        }
+    }
+    ```
+
+- 排序+双指针
+
+    ```java
+    class Solution {
+        public List<List<Integer>> threeSum(int[] nums) {
+            List<List<Integer>> res = new ArrayList<>();
+            Arrays.sort(nums);
+            //-4 -1 -1 0 1 2
+            int n = nums.length;
+            for (int i = 0; i < n - 2; i++) {
+                if (i > 0 && nums[i] == nums[i - 1]) {
+                    continue;
+                }
+                int left = i + 1, right = n - 1;
+                while (left < right) {
+                    if (left > i + 1 && nums[left] == nums[left - 1]) {
+                        left++;
+                        continue;
+                    }
+                    //关键在于如何移动指针
+                    if (nums[i] + nums[left] + nums[right] == 0) {
+                        res.add(List.of(nums[i], nums[left], nums[right]));
+                        left++;
+                    } else if (nums[i] + nums[left] + nums[right] < 0)
+                        left++;
+                    else
+                        right--;
+                }
+            }
+            return res;
+        }
+    }
+    ```
+
+    思路：使用三重循环的框架枚举三元组，想要不重复的话首先排序，这样枚举$(a,b,c)$有序三元组，保证只有 $(a,b,c)$ 这个顺序会被枚举到，而 $(b,a,c)$、$(c,b,a)$ 等等这些不会，这样就减少了重复。
+
+    同时，对于每一重循环而言，相邻两次枚举的元素不能相同，否则也会造成重复。
+
+    ```
+    [0, 1, 2, 2, 2, 3]
+     ^  ^  ^
+    ```
+
+    使用三重循环枚举到的第一个三元组为 $(0,1,2)$，如果第三重循环继续枚举下一个元素，那么仍然是三元组$(0,1,2)$，产生了重复。因此我们需要将第三重循环「跳到」下一个不相同的元素，即数组中的最后一个元素 3，枚举三元组$(0,1,3)$。
+
+    接着优化三重循环：可以发现如果我们固定了前两重循环枚举到的元素 a和 b，那么只有唯一的 c 满足 $a+b+c=0$。当第二重循环往后枚举一个元素 $b′$ 时，由于 $b′>b$，那么满足 $a+b′+c′=0$ 的 $c′$ 一定有 $c′<c$，即 $c′$ 在数组中一定出现在 c 的左侧。也就是说，我们可以从小到大枚举 b，同时从大到小枚举 c，即第二重循环和第三重循环实际上是并列的关系。
+
+##### q16 最接近的三数之和
+
+```
+给定一个包括 n 个整数的数组 nums 和 一个目标值 target。找出 nums 中的三个整数，使得它们的和与 target 最接近。返回这三个数的和。假定每组输入只存在唯一答案。
+
+示例：
+输入：nums = [-1,2,1,-4], target = 1
+输出：2
+解释：与 target 最接近的和是 2 (-1 + 2 + 1 = 2) 。
+
+提示：
+	3 <= nums.length <= 10^3
+	-10^3 <= nums[i] <= 10^3
+	-10^4 <= target <= 10^4
+```
+
+- 排序+双指针
+
+  ```java
+  class Solution {
+      public int threeSumClosest(int[] nums, int target) {
+          int res = nums[0] + nums[1] + nums[2];
+          int n = nums.length;
+          Arrays.sort(nums);
+  
+          //-4 -1 1 2
+          for (int i = 0; i < n - 2; i++) {
+              if(i > 0 && nums[i] == nums[i-1])//优化
+                  continue;
+              int left = i + 1, right = n - 1;
+              while (left < right) {
+                  if(left > i+1 && nums[left] == nums[left-1]){//优化
+                      left++;
+                      continue;
+                  }
+                  int t = nums[i] + nums[left] + nums[right];
+                  if (t == target) return t;//优化
+                  int diff_t = Math.abs(target - t);
+                  int diff_res = Math.abs(target - res);
+                  if (diff_t < diff_res) {
+                      res = t;
+                  }
+                  if (target - t > 0) left++;
+                  else right--;
+              }
+          }
+  
+          return res;
+      }
+  }
+  ```
+
+  思路与q15类似，原本相等的要求变成了最接近，可以计算每一个三元组之和与target的距离，更新这个和。在双指针移动部分，如果三元组之和小于target，那就left指针往右移动，否则right指针往左移动。
+
+  优化之处：可以像q15一样遇到重复元素就跳过（在leetcode提供的测试用例中没有体现，7ms->7ms）；当三元组之和等于target时直接返回，因为相等一定是最接近的（在leetcode提供的测试用例中有体现，10ms->7ms）。
+
+##### q26 删除排序数组中的重复项
+
+```
+给定一个排序数组，你需要在 原地 删除重复出现的元素，使得每个元素只出现一次，返回移除后数组的新长度。
+不要使用额外的数组空间，你必须在 原地 修改输入数组 并在使用 O(1) 额外空间的条件下完成。
+
+示例 1:
+给定数组 nums = [1,1,2], 
+函数应该返回新的长度 2, 并且原数组 nums 的前两个元素被修改为 1, 2。 
+你不需要考虑数组中超出新长度后面的元素。
+
+示例 2:
+给定 nums = [0,0,1,1,1,2,2,3,3,4],
+函数应该返回新的长度 5, 并且原数组 nums 的前五个元素被修改为 0, 1, 2, 3, 4。
+你不需要考虑数组中超出新长度后面的元素。
+
+说明:
+为什么返回数值是整数，但输出的答案是数组呢?
+请注意，输入数组是以「引用」方式传递的，这意味着在函数里修改输入数组对于调用者是可见的。
+你可以想象内部操作如下:
+
+// nums 是以“引用”方式传递的。也就是说，不对实参做任何拷贝
+int len = removeDuplicates(nums);
+
+// 在函数里修改输入数组对于调用者是可见的。
+// 根据你的函数返回的长度, 它会打印出数组中该长度范围内的所有元素。
+for (int i = 0; i < len; i++) {
+    print(nums[i]);
+}
+```
+
+- 滑动窗口
+
+  ```java
+  class Solution {
+      public int removeDuplicates(int[] nums) {
+          int left = 0, right = 0;
+          while (right < nums.length) {
+              if (nums[right] == nums[left]) {
+                  right++;
+                  continue;
+              }
+              nums[left + 1] = nums[right];
+              left++;
+              right++;
+          }
+          return left + 1;
+      }
+  }
+  ```
+
+  这个问题的双指针运用更接近于典型字符串问题中的滑动窗口，即从同一侧开始移动，right指针只要和left指针的内容相同就右移，如果不同就停下来将left指针的内容更新，然后两个指针继续右移。
+
