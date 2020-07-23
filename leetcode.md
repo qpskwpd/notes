@@ -5,7 +5,7 @@ leetcode
 ##### q1 两数之和
 
 ```
-给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那 两个 整数，并返回他们的数组下标。
+给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那 两个整数，并返回他们的数组下标。
 你可以假设每种输入只会对应一个答案。但是，数组中同一个元素不能使用两遍。
 
 示例:
@@ -717,7 +717,7 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
 解释: 4 皇后问题存在两个不同的解法。
 ```
 
-- 暴力解法：
+- 暴力解法（回溯）：
 
   ```java
   class Solution {
@@ -731,11 +731,11 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
           for(int i=0; i<n; i++){
               track.add(new String(str));
           }
-          backtrace(track, 0);
+          backtrack(track, 0);
           return res;            
       }
   
-      public void backtrace(LinkedList<String> track, int row) {
+      public void backtrack(LinkedList<String> track, int row) {
           if (row == track.size()){
               res.add(new LinkedList<String>(track));
               return;
@@ -746,7 +746,7 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
               if (!isValid(track, row, col)) 
                   continue;
               replace(track, row, col, 'Q');
-              backtrace(track, row + 1);
+              backtrack(track, row + 1);
               replace(track, row, col, '.');
           }
       }
@@ -776,6 +776,133 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
       }
   }
   ```
+
+##### q52 N皇后2
+
+```
+给定一个整数 n，返回 n 皇后不同的解决方案的数量。
+```
+
+- 类似q51的解法
+
+  ```java
+  class Solution {
+   
+      int res=0;
+  
+      public int totalNQueens(int n) {
+          //设计一个棋盘，棋盘上什么都没放，都为.
+          char[][] board=new char[n][n];
+          for(int i=0;i<n;i++){
+              Arrays.fill(board[i],'.');
+          }
+          backtrack(board,0);
+          return res;
+      }
+  
+     
+  
+      private void backtrack(char[][] board,int row){
+          //结束条件，全部放好了
+          if(row==board.length){
+             res++;
+              return;
+          }
+  
+          //每一行都一列一列试着放，如果不合法，则跳过
+          int col=board[0].length;
+          for(int i=0;i<col;i++){
+              if(!isValid(board,row,i)){
+                  continue;
+              }
+              //防止
+              board[row][i]='Q';
+              //放置下一行
+              backtrack(board,row+1);
+              //取消放置
+              board[row][i]='.';
+          }
+      }
+  
+      //判断这个位置是否合法
+      private boolean isValid(char[][] board,int row,int column){
+          //排查这一列有没有放置过皇后
+          for(int i=0;i<board.length;i++){
+              if(board[i][column]=='Q') return false;
+          }
+  
+          //排查左对角线有没有放置果皇后
+          for(int i=row-1,j=column-1;i>=0&&j>=0;i--,j--){
+              if(board[i][j]=='Q'){
+                  return false;
+              }
+          }
+  
+          //排查右对角线有没有放置过皇后
+          for(int i=row-1,j=column+1;i>=0 && j<board[0].length;i--,j++){
+              if(board[i][j]=='Q'){
+                  return false;
+              }
+          }
+  
+          return true;
+      }
+  }
+  ```
+
+- 检查列的全排列
+
+  ```java
+  class Solution {
+      int res = 0;
+      public int totalNQueens(int n) {
+          if(n <= 0) return 0;
+          int[] rows = new int[n];
+          for(int i=0; i<n; i++)
+              rows[i] = i;
+          backtrack(rows, 0);
+          return res;
+      }
+  
+      public void backtrack(int[] rows, int curPos) {
+          if(curPos == rows.length-1) {
+              boolean flag = true;
+              for(int i=0; i<rows.length; i++) {
+                  for(int j=i+1; j<rows.length; j++) {
+                      int rowDiff = i-j < 0 ? j-i : i-j;
+                      int iCol = rows[i];
+                      int jCol = rows[j];
+                      int colDiif = iCol - jCol < 0 ? jCol - iCol : iCol - jCol; 
+                      if(rowDiff == colDiif) {
+                          flag = false;
+                          break;
+                      }
+                  }
+                  if(!flag) break;
+              }
+              if(flag) res++;
+              return;
+          }
+          for(int i=curPos; i< rows.length; i++) {
+              swap(rows, i, curPos);
+              backtrack(rows, curPos + 1);
+              swap(rows, i, curPos);
+          }
+      }
+  
+      public void swap(int[] rows, int i, int j) {
+          int temp = rows[i];
+          rows[i] = rows[j];
+          rows[j] = temp;
+      }
+  }
+  ```
+
+  由于皇后不能同行，因此必然在不同的行上，可以初始化一个数组保存每个皇后所在的列。对列进行全排列后，检查每一个排列是否存在同对角线即可。即`i-j == col[i]-col[j]`或`j-i == col[i]-col[j]`。
+
+  ![](img/leetcode/8-queens.png)
+
+  原本以为这种做法应该会快一些，但实际上比较慢，无论是直接使用list容器操作还是数组中元素直接交换。一方面是需要列举所有列，无法像上面那样在放置过程中遇到不合法情况直接跳过，另一方面是容器的操作或者判断列是否存在同对角线的双层循环太耗时。
 
 #### BFS：在图中求起点到终点的最短距离
 
@@ -2376,7 +2503,7 @@ class Solution {
 
 - 有限状态自动机（DFA）
 
-  <img src="img/leetcode/8_fig1.png" style="zoom: 25%;" />
+  <img src="img/offer/q67.png" style="zoom: 25%;" />
 
   练习量较少，更好的写法先跳过。
 
@@ -3134,3 +3261,4 @@ k = 3
   ```
 
   
+
