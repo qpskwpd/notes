@@ -822,7 +822,7 @@ Java堆和方法区具有不确定性，如一个接口的多个实现类需要�
 
     - CONSTANT_Utf8_info类型常量，编码实际内容，如类名、方法名、字段名等。length说明这个utf-8编码的字符串长度是多少字节，后面紧跟长度为length字节的连续数据，是一个使用utf-8缩略编码表示的字符串。
 
-      ![](G:\2019黑马Java(IDEA)\md\img\java虚拟机\constant_utf8_info.jpg)
+      ![](img\java虚拟机\constant_utf8_info.jpg)
 
       ![](img\java虚拟机\TestClass_3.jpg)
     

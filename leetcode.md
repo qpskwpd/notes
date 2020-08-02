@@ -607,7 +607,7 @@ for 状态1 in 状态1的所有取值：
   	public int coinChangeM(int[] coins, int amount, int[] mem) {
           if (amount == 0) return 0;
           if (amount < 0) return -1;
-          if (mem[amount] != Integer.MAX_VALUE) return mem[amount];
+          if (mem[amount] != 0) return mem[amount];
   
           int res = Integer.MAX_VALUE;
           for (int coin : coins) {
@@ -622,14 +622,208 @@ for 状态1 in 状态1的所有取值：
   
       public int coinChange2(int[] coins, int amount) {
           int[] mem = new int[amount + 1];
-          for (int i = 0; i < mem.length; i++) {
-              mem[i] = Integer.MAX_VALUE;
-          }
           return coinChangeM(coins, amount, mem);
       }
   ```
-
+  
   amount作为状态，如果某个状态在记忆集中已经存在，即已经计算过，那么直接返回它。
+
+- 迭代
+
+  ```java
+  class Solution {
+      public int coinChange(int[] coins, int amount) {
+          if(amount < 0) return -1;
+  
+          int[] dp = new int[amount+1];
+          Arrays.fill(dp, amount+1);
+          dp[0] = 0;
+          for(int i = 0; i < dp.length; i++) {
+              for(int j = 0; j < coins.length; j++) {
+                  if(i - coins[j] >= 0) {
+                      dp[i] = Math.min(dp[i], 1 + dp[i - coins[j]]);
+                  }
+              }
+          }
+  
+          return dp[amount] == amount+1 ? -1 : dp[amount];
+      }
+  }
+  ```
+
+##### q518 零钱兑换2
+
+```
+给定不同面额的硬币和一个总金额。写出函数来计算可以凑成总金额的硬币组合数。假设每一种面额的硬币有无限个。 
+
+示例 1:
+输入: amount = 5, coins = [1, 2, 5]
+输出: 4
+解释: 有四种方式可以凑成总金额:
+5=5
+5=2+2+1
+5=2+1+1+1
+5=1+1+1+1+1
+
+示例 2:
+输入: amount = 3, coins = [2]
+输出: 0
+解释: 只用面额2的硬币不能凑成总金额3。
+
+示例 3:
+输入: amount = 10, coins = [10] 
+输出: 1
+
+注意:
+你可以假设：
+	0 <= amount (总金额) <= 5000
+	1 <= coin (硬币面额) <= 5000
+	硬币种类不超过 500 种
+	结果符合 32 位符号整数
+```
+
+```java
+class Solution {
+    public int change(int amount, int[] coins) {
+        if(amount < 0) return 0;
+
+        int[][] dp = new int[coins.length + 1][amount + 1];
+        for(int i = 0; i < dp.length; i++) dp[i][0] = 1;
+        for(int i = 1; i < dp.length; i++) {
+            for(int j = 1; j < amount + 1; j++) {
+                if (j - coins[i - 1] < 0) dp[i][j] = dp[i-1][j];
+                else dp[i][j] = dp[i-1][j] + dp[i][j-coins[i-1]];
+            }
+        }
+
+        return dp[coins.length][amount];
+    }
+}
+```
+
+这个类似背包问题，即背包容量为钱数，物品重量为硬币，只是可以选择无限多个物品。
+
+因此仍然可以定义`dp[i][j]`为选择到第i个硬币，钱数为j时的组合数。
+
+当要凑的钱数为0时，可以认为组合只有一种。当没有硬币可选时，可以认为组合为0。
+
+当前钱数-当前要选择的硬币大于等于0时，可以选它，否则不能选，只能继承`dp[i-1][j]`。
+
+可以选择的时候因为是求总共的组合数，因此就是选它和不选它的组合数之和。前者即为减去当前硬币的钱数对应 的组合数。
+
+很自然地，可以看出问题要求个数的时候，状态转移的时候通常是做加法，问题要求最值的时候，状态转移的时候通常是求最值。
+
+##### q673 最长递增子序列的个数
+
+```
+给定一个未排序的整数数组，找到最长递增子序列的个数。
+
+示例 1:
+输入: [1,3,5,4,7]
+输出: 2
+解释: 有两个最长递增子序列，分别是 [1, 3, 4, 7] 和[1, 3, 5, 7]。
+
+示例 2:
+输入: [2,2,2,2,2]
+输出: 5
+解释: 最长递增子序列的长度是1，并且存在5个子序列的长度为1，因此输出5。
+
+注意: 给定的数组长度不超过 2000 并且结果一定是32位有符号整数。
+```
+
+```java
+class Solution {
+    public int findNumberOfLIS(int[] nums) {
+        int len = nums.length;
+        if(len <= 1) return len;
+        
+        int[] lengths = new int[len];
+        int[] counts = new int[len];
+        Arrays.fill(lengths, 1);
+        Arrays.fill(counts, 1);
+
+        for(int j = 0; j < len; j++) {
+            for(int i = 0; i < j; i++) {
+                if(nums[i] < nums[j]) {
+                    if(lengths[i] >= lengths[j]){
+                        lengths[j] = lengths[i] + 1;
+                        counts[j] = counts[i];
+                    } else if(lengths[i] + 1 == lengths[j]) {
+                        counts[j] += counts[i];
+                    }
+                }
+            }
+        }
+
+        int longest = 0;
+        for(int length : lengths)
+            if(length > longest) longest = length;
+        int res = 0;
+        for(int i=0; i<len; i++)
+            if(lengths[i] == longest) res += counts[i];
+        return res;
+    }
+}
+```
+
+关键是需要使用两个数组配合完成，一个用于保存当前数结尾的最长递增子列的长度，一个用于保存当前数结尾的最长递增子列的个数。
+
+长度比较容易求解，对于第i个数，再遍历它前边的数，比当前数小则更新当前的长度。
+
+对于数量，当前边的数的长度+1就等于当前数的长度时，则更新数量，即加上前边的数的数量。
+
+```
+序列：1 2 5 4 4 7
+长度：1 2 3 3 3 4
+数量：1 1 1 1 1 3
+```
+
+##### 背包问题
+
+```
+给你⼀个可装载重量为W的背包和N个物品，每个物品有重量和价值两个属性。其中第i个物品的重量为wt[i]，价值为val[i]，现在让你⽤这个背包装物品，最多能装的价值是多少？
+```
+
+```java
+package cn.dut.leetcode;
+
+public class BagProblem {
+
+    public static void main(String[] args) {
+        int[] wt = new int[]{2, 1, 3, 5};
+        int[] val = new int[]{4, 2, 3, 6};
+        int bag = 6;
+        System.out.println(maxValue(wt, val, bag));
+    }
+
+    private static int maxValue(int[] wt, int[] val, int W) {
+        int N = wt.length;
+        int[][] dp = new int[N + 1][W + 1];
+
+        for (int i = 1; i <= N; i++) {
+            for (int w = 1; w <= W; w++) {
+                if (w - wt[i - 1] < 0) dp[i][w] = dp[i - 1][w];
+                else dp[i][w] = Math.max(dp[i - 1][w], dp[i - 1][w - wt[i - 1]] + val[i - 1]);
+            }
+        }
+        return dp[N][W];
+    }
+}
+```
+
+这道题用回溯应该也能做。动态规划的难点在于考虑清楚状态和选择。
+
+状态有两个：一个是选择到第i个物品，一个是此时背包的重量。它们两个组成状态数组dp，即`dp[i][w]`表示选择到第i个物品，且背包此时重量为w的最大价值。选择到第i个物品并不代表前面的物品都被选择。
+
+选择则是对于第i个物品，是装入背包还是不装入背包。
+
+结果则是选择完最后一个物品，背包的重量为W时的最大价值，即`dp[N][W]`。
+
+因此状态转移方程为`dp[i][w] = max(dp[i-1][w], dp[i-1][w-wt[i-1]]+val[i-1])`，即对于第i个物品，最大价值为：不选择它，则继承选择到上一个物品时的最大价值；选择它，则寻找剩余重量w-wt[i-1]限制下的最大价值，加上当前物品的价值。
+
+由于  i  是从 1 开始的，所以  val  和  wt  的索引是  i-1  时表⽰第i  个物品的价值和重量。
+
+
 
 #### 回溯问题：求所有可能情况
 
