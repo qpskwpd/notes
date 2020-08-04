@@ -651,7 +651,7 @@ for 状态1 in 状态1的所有取值：
   }
   ```
 
-##### q518 零钱兑换2
+##### q518 零钱兑换2/背包问题
 
 ```
 给定不同面额的硬币和一个总金额。写出函数来计算可以凑成总金额的硬币组合数。假设每一种面额的硬币有无限个。 
@@ -823,7 +823,91 @@ public class BagProblem {
 
 由于  i  是从 1 开始的，所以  val  和  wt  的索引是  i-1  时表⽰第i  个物品的价值和重量。
 
+#### 416 分割等和子集/背包问题
 
+```
+给定一个只包含正整数的非空数组。是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。
+注意:
+	每个数组中的元素不会超过 100
+	数组的大小不会超过 200
+
+示例 1:
+输入: [1, 5, 11, 5]
+输出: true
+解释: 数组可以分割成 [1, 5, 5] 和 [11].
+
+示例 2:
+输入: [1, 2, 3, 5]
+输出: false
+解释: 数组不能分割成两个元素和相等的子集.
+```
+
+```java
+class Solution {
+    public boolean canPartition(int[] nums) {
+        if(nums == null || nums.length == 0) return false;
+        int sum = 0;
+        for(int num : nums) sum += num;
+        if(sum % 2 == 1) return false;
+
+        int n = nums.length;
+        sum = sum / 2;
+
+        boolean[][] dp = new boolean[n + 1][sum + 1];
+        for(int i = 0; i < dp.length; i++) dp[i][0] = true;
+
+        for(int i = 1; i <= n; i++) {
+            for(int j = 1; j <= sum; j++) {
+                if(j - nums[i-1] >= 0) {
+                    dp[i][j] = dp[i-1][j-nums[i-1]] | dp[i-1][j];
+                } else {
+                    dp[i][j] = dp[i-1][j];
+                }
+            }
+        }
+
+        return dp[n][sum];
+    }
+}
+```
+
+与背包问题类似，可以看作有N个物品，物品重nums[i]，有没有一种装法装满sum/2。
+
+因此可以定义`dp[i][j]`为装到第i个物品，背包重量为j时，有没有一种装法。
+
+则j-nums[i-1]>=0时，考虑不装它，即`dp[i-1][j]`，和装它，即装完上个物品时容量为j-nums[i-1]的情况，`dp[i-1][j-nums[i-1]]`。
+
+状态压缩：
+
+```java
+class Solution {
+    public boolean canPartition(int[] nums) {
+        if(nums == null || nums.length == 0) return false;
+        int sum = 0;
+        for(int num : nums) sum += num;
+        if(sum % 2 == 1) return false;
+
+        int n = nums.length;
+        sum = sum / 2;
+
+        boolean[] dp = new boolean[sum + 1];
+        dp[0] = true;
+
+        for(int i = 0; i < n; i++) {
+            for(int j = sum; j >= 0; j--) {
+                if(j - nums[i] >= 0){
+                    dp[j] = dp[j] || dp[j - nums[i]];
+                }
+            } 
+        }
+        return dp[sum];
+    }
+}
+```
+
+只用一维数组，思路不变，外层遍历仍然是选择到第i个物品。内层循环需要从大到小遍历，因为每次需要用到`j-nums[i]`的数据，因此不能从小到大。
+
+每次遍历时，`dp[j-nums[i]]`就相当于`dp[i-1][j-nums[i]]`。
 
 #### 回溯问题：求所有可能情况
 
