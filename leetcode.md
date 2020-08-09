@@ -1,4 +1,4 @@
-leetcode
+### leetcode
 
 #### hash相关
 
@@ -823,7 +823,7 @@ public class BagProblem {
 
 由于  i  是从 1 开始的，所以  val  和  wt  的索引是  i-1  时表⽰第i  个物品的价值和重量。
 
-#### 416 分割等和子集/背包问题
+##### 416 分割等和子集/背包问题
 
 ```
 给定一个只包含正整数的非空数组。是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。
@@ -908,6 +908,651 @@ class Solution {
 只用一维数组，思路不变，外层遍历仍然是选择到第i个物品。内层循环需要从大到小遍历，因为每次需要用到`j-nums[i]`的数据，因此不能从小到大。
 
 每次遍历时，`dp[j-nums[i]]`就相当于`dp[i-1][j-nums[i]]`。
+
+##### 72 编辑距离
+
+```
+给你两个单词 word1 和 word2，请你计算出将 word1 转换成 word2 所使用的最少操作数 。
+你可以对一个单词进行如下三种操作：
+
+	插入一个字符
+	删除一个字符
+	替换一个字符
+
+示例 1：
+输入：word1 = "horse", word2 = "ros"
+输出：3
+解释：
+horse -> rorse (将 'h' 替换为 'r')
+rorse -> rose (删除 'r')
+rose -> ros (删除 'e')
+
+示例 2：
+输入：word1 = "intention", word2 = "execution"
+输出：5
+解释：
+intention -> inention (删除 't')
+inention -> enention (将 'i' 替换为 'e')
+enention -> exention (将 'n' 替换为 'x')
+exention -> exection (将 'n' 替换为 'c')
+exection -> execution (插入 'u')
+```
+
+```java
+class Solution {
+    public int minDistance(String word1, String word2) {
+        Map<String, Integer> mem = new HashMap<>();
+        return dp(word1.length()-1, word2.length()-1, word1, word2, mem);
+    }
+
+    private int dp(int i, int j, String word1, String word2, Map<String, Integer> mem) {
+        if(i == -1) return j+1;
+        if(j == -1) return i+1;
+        String key = i + "+" + j;
+        if(mem.containsKey(key)) return mem.get(key);
+        if(word1.charAt(i) == word2.charAt(j)) return dp(i-1, j-1, word1, word2, mem);
+        else {
+            int costOfInsert = dp(i, j-1, word1, word2, mem) + 1;
+            int costOfDelete = dp(i-1, j, word1, word2, mem) + 1;
+            int costOfReplace = dp(i-1, j-1, word1, word2, mem) + 1;
+            int val = min(costOfInsert, costOfDelete, costOfReplace);
+            mem.put(key, val);
+            return val;
+        }
+    }
+
+    private int min(int a, int b, int c) {
+        int t = a < b ? a : b;
+        return t < c ? t : c;
+    }
+}
+```
+
+加了记忆集的递归写法也比较慢。
+
+整体思路是这样的：用两个指针指向两个字符串的开头，然后开始比较。
+
+两个字符相同，则编辑距离取决于后面的子字符串，因此i+1，j+1。
+
+两个字符不同，此时有三种选择：
+
+- 为字符串A插入字符串B当前字符，则编辑距离取决于字符串B后面的子字符串，因此j+1。
+
+  ```
+  A:horse
+  B:ros
+  为A插入r，A变成rhorse，此时应该开始比较horse和os
+  ```
+
+- 为字符串A删除当前字符，则编辑距离取决于字符串A后面的子字符串，因此i+1。
+
+  ```
+  A:horse
+  B:ros
+  为A删除h，A变成orse，此时应该开始比较orse和ros
+  ```
+
+- 为字符串A替换为字符串B当前字符，则编辑距离取决于后面的子字符串，因此i+1，j+1。
+
+  ```
+  A:horse
+  B:ros
+  为A替换h，A变成rorse，此时应该开始比较orse和os
+  ```
+
+因此应该取这三种操作中最小的那个值。
+
+`dp[i][j]`表示以i长度结尾的字符串转换成以j长度结尾的字符串的编辑距离。
+
+基础情况为一个字符串为空，那么转换为另一个字符串的编辑距离就为它本身的长度。
+
+<img src="img/leetcode/72.PNG" style="zoom:50%;" />
+
+```java
+class Solution {
+    public int minDistance(String word1, String word2) {
+        int n = word1.length(), m = word2.length();
+        int[][] dp = new int[n+1][m+1];
+        for(int i=0; i<=n; i++) dp[i][0] = i;
+        for(int i=0; i<=m; i++) dp[0][i] = i;
+
+        for(int i=1; i<=n; i++) {
+            for(int j=1; j<=m; j++) {
+                if(word1.charAt(i-1) == word2.charAt(j-1)) dp[i][j] = dp[i-1][j-1];
+                else {
+                    int costOfInsert = dp[i][j-1] + 1;
+                    int costOfDelete = dp[i-1][j] + 1;
+                    int costOfReplace = dp[i-1][j-1] + 1;
+                    dp[i][j] = min(costOfInsert, costOfDelete, costOfReplace);
+                }
+            }
+        }
+        return dp[n][m];
+    }
+
+    private int min(int a, int b, int c) {
+        int t = a < b ? a : b;
+        return t < c ? t : c;
+    }
+}
+```
+
+##### 1143 最长公共子序列
+
+```
+给定两个字符串 text1 和 text2，返回这两个字符串的最长公共子序列的长度。
+
+一个字符串的 子序列 是指这样一个新的字符串：它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。
+例如，"ace" 是 "abcde" 的子序列，但 "aec" 不是 "abcde" 的子序列。两个字符串的「公共子序列」是这两个字符串所共同拥有的子序列。
+
+若这两个字符串没有公共子序列，则返回 0。
+
+示例 1:
+输入：text1 = "abcde", text2 = "ace" 
+输出：3  
+解释：最长公共子序列是 "ace"，它的长度为 3。
+
+示例 2:
+输入：text1 = "abc", text2 = "abc"
+输出：3
+解释：最长公共子序列是 "abc"，它的长度为 3。
+
+示例 3:
+输入：text1 = "abc", text2 = "def"
+输出：0
+解释：两个字符串没有公共子序列，返回 0。
+
+提示:
+	1 <= text1.length <= 1000
+	1 <= text2.length <= 1000
+	输入的字符串只含有小写英文字符。
+```
+
+```java
+class Solution {
+    public int longestCommonSubsequence(String text1, String text2) {
+        int n = text1.length(), m = text2.length();
+        int[][] dp = new int[n+1][m+1];
+
+        for(int i=1; i<=n; i++) {
+            for(int j=1; j<=m; j++) {
+                if(text1.charAt(i-1) == text2.charAt(j-1)){
+                    dp[i][j] = dp[i-1][j-1] + 1;
+                } else {
+                    dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+                }
+            }
+        }
+
+        return dp[n][m];
+    }
+}
+```
+
+两个字符串相关的动态规划问题，思路类似于编辑距离，用两个指针在字符串上移动，更新状态。
+
+如果两个字符相同，那么它一定在最长公共子序列中。如果不相同，那么需要移动其中一个指针，在两种情况中选择公共子序列更长的那个。
+
+`dp[i][j]`表示`t1[:i]`和`t2[:j]`的最长公共子序列长度。
+
+```
+		0	1	2	3	4	5
+		""	a 	b	c	d	e
+0	""	0	0	0	0	0	0
+1	a	0	1	1	1	1	1
+2	c	0	1	1	2	2	2
+3	e	0	1	1	2	2	3
+```
+
+##### 887 鸡蛋掉落
+
+```
+你将获得 K 个鸡蛋，并可以使用一栋从 1 到 N  共有 N 层楼的建筑。
+每个蛋的功能都是一样的，如果一个蛋碎了，你就不能再把它掉下去。
+你知道存在楼层 F ，满足 0 <= F <= N 任何从高于 F 的楼层落下的鸡蛋都会碎，从 F 楼层或比它低的楼层落下的鸡蛋都不会破。
+
+每次移动，你可以取一个鸡蛋（如果你有完整的鸡蛋）并把它从任一楼层 X 扔下（满足 1 <= X <= N）。
+你的目标是确切地知道 F 的值是多少。
+无论 F 的初始值如何，你确定 F 的值的最小移动次数是多少？
+
+示例 1：
+输入：K = 1, N = 2
+输出：2
+解释：
+鸡蛋从 1 楼掉落。如果它碎了，我们肯定知道 F = 0 。
+否则，鸡蛋从 2 楼掉落。如果它碎了，我们肯定知道 F = 1 。
+如果它没碎，那么我们肯定知道 F = 2 。
+因此，在最坏的情况下我们需要移动 2 次以确定 F 是多少。
+
+示例 2：
+输入：K = 2, N = 6
+输出：3
+
+示例 3：
+输入：K = 3, N = 14
+输出：4
+
+提示：
+	1 <= K <= 100
+	1 <= N <= 10000
+```
+
+```java
+class Solution {
+    public int superEggDrop(int K, int N) {
+        if(K==1) return N;
+        if(N==0) return 0;
+        int res = Integer.MAX_VALUE;
+        for(int i=1; i<=N; i++) {
+            res = Math.min(res, Math.max(superEggDrop(K-1,i-1), superEggDrop(K, N-i))+1);
+        }
+        return res;
+    }
+}
+```
+
+递归的思路较容易理解，但是会超时。
+
+思路：状态有两个，鸡蛋个数K，楼高N。而选择为从哪一层往下扔。由于并不知道应该从哪一层往下扔，所以需要穷举所有情况，找出其中需要的最少次数。
+
+假设从第i层往下扔，将出现两种可能，鸡蛋碎了，则鸡蛋个数-1，需要尝试的楼高变为i-1；鸡蛋没碎，则鸡蛋个数不变，需要尝试的楼高变为N-i。最坏情况应该是这两种可能中需要的次数更多的那种。
+
+基础情况为，如果只有一个鸡蛋，那么只能线性探测。如果楼高为0，那么不需要测试。
+
+```java
+class Solution {
+    public int superEggDrop(int K, int N) {
+        if(K==1) return N;
+        if(N==0) return 0;
+        int[][] dp = new int[K+1][N+1];
+
+        int m = 0;
+        while(dp[K][m] < N) {
+            m++;
+            for(int k=1; k<=K; k++)
+                dp[k][m] = dp[k][m-1] + dp[k-1][m-1] + 1;
+        }
+
+        return m;
+    }
+}
+```
+
+迭代时间复杂度为O(KN)，但是难以理解，关键是把探测到几层楼理解为探测的楼层高度。
+
+迭代的思路为将原问题进行一个等价的转换，即K个鸡蛋，m次扔鸡蛋的机会，最多能探测的楼层高度？
+
+这样状态变为鸡蛋个数K，扔鸡蛋的机会m。在`dp[k][m]`没有达到N层楼时，不断增加扔鸡蛋的机会，即外层循环。
+
+对于某一层，扔鸡蛋的结果只有碎和不碎两种，碎了就探测下面的楼层，不碎就探测上面的楼层。因此探测的楼层就是下面的楼层、上面的楼层与当前楼层之和，即`dp[k][m] = dp[k][m-1] + dp[k-1][m-1] + 1;`。
+
+`dp[k][m-1]`表示鸡蛋没碎，但机会减1，相当于从此楼层开始起，用m-1次机会扔k个鸡蛋能探测的楼层，即此楼层上面的楼层。`dp[k-1][m-1]`表示鸡蛋碎了，机会减1，相当于从此楼层开始起，用m-1次机会扔k-1个鸡蛋能探测的楼层，即此楼层下面的楼层。
+
+##### q198 打家劫舍1
+
+```
+你是一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响你偷窃的唯一制约因素就是相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
+
+给定一个代表每个房屋存放金额的非负整数数组，计算你 不触动警报装置的情况下 ，一夜之内能够偷窃到的最高金额。
+
+示例 1：
+输入：[1,2,3,1]
+输出：4
+解释：偷窃 1 号房屋 (金额 = 1) ，然后偷窃 3 号房屋 (金额 = 3)。
+     偷窃到的最高金额 = 1 + 3 = 4 。
+
+示例 2：
+输入：[2,7,9,3,1]
+输出：12
+解释：偷窃 1 号房屋 (金额 = 2), 偷窃 3 号房屋 (金额 = 9)，接着偷窃 5 号房屋 (金额 = 1)。
+     偷窃到的最高金额 = 2 + 9 + 1 = 12 。
+
+提示：
+	0 <= nums.length <= 100
+	0 <= nums[i] <= 400
+```
+
+```java
+class Solution {
+    public int rob(int[] nums) {
+        int len = nums.length;
+        int[] dp = new int[len+1];
+
+        for(int i=1; i<=len; i++) {
+            if(i-2>=0)
+                dp[i] = Math.max(nums[i-1]+dp[i-2], dp[i-1]);
+            else
+                dp[i] = nums[i-1];
+        }
+
+        return dp[len];
+    }
+}
+```
+
+打家劫舍系列最简单的一道。状态dp[i]为到第i家时打劫的最大金额，选择为打劫或不打劫。打劫则需要当前家的金额加上i-2家的金额，不打劫则为i-1家的金额。
+
+base case为第一家，只能打劫。
+
+递归：
+
+```java
+class Solution {
+    public int rob(int[] nums) {
+        if(nums.length == 0) return 0;
+        int[] mem = new int[nums.length];
+        Arrays.fill(mem, -1);
+        return dp(nums, 0, mem);
+    }
+
+    private int dp(int[] nums, int i, int[] mem) {
+        if(i >= nums.length) return 0;
+        if(mem[i] != -1) return mem[i];
+        int res = Math.max(dp(nums, i+1, mem), nums[i]+dp(nums, i+2, mem));
+        mem[i] = res;
+        return res;
+    }
+}
+```
+
+##### q213 打家劫舍2
+
+```
+你是一个专业的小偷，计划偷窃沿街的房屋，每间房内都藏有一定的现金。这个地方所有的房屋都围成一圈，这意味着第一个房屋和最后一个房屋是紧挨着的。同时，相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
+
+给定一个代表每个房屋存放金额的非负整数数组，计算你在不触动警报装置的情况下，能够偷窃到的最高金额。
+
+示例 1:
+输入: [2,3,2]
+输出: 3
+解释: 你不能先偷窃 1 号房屋（金额 = 2），然后偷窃 3 号房屋（金额 = 2）, 因为他们是相邻的。
+
+
+示例 2:
+输入: [1,2,3,1]
+输出: 4
+解释: 你可以先偷窃 1 号房屋（金额 = 1），然后偷窃 3 号房屋（金额 = 3）。
+     偷窃到的最高金额 = 1 + 3 = 4 。
+```
+
+```java
+class Solution {
+    public int rob(int[] nums) {
+        int len = nums.length;
+        if(len == 0) return 0;
+        if(len == 1) return nums[0];
+        
+        return Math.max(robRange(nums, 0, len-2), robRange(nums, 1, len-1));
+    }
+
+    private int robRange(int[] nums, int left, int right) {
+        int dp_i = 0;
+        int dp_i_1 = 0, dp_i_2 = 0;
+
+        for(int i=left; i<=right; i++) {
+            dp_i = Math.max(nums[i] + dp_i_2, dp_i_1);
+            dp_i_2 = dp_i_1;
+            dp_i_1 = dp_i;
+        }
+
+        return dp_i;
+    }
+}
+```
+
+房子变成了环状，那么最终只有三种情况：选择情况2和情况3中较大的金额即可。
+
+![](img/leetcode/213.png)
+
+##### q337 打家劫舍3
+
+```
+在上次打劫完一条街道之后和一圈房屋后，小偷又发现了一个新的可行窃的地区。这个地区只有一个入口，我们称之为“根”。 除了“根”之外，每栋房子有且只有一个“父“房子与之相连。一番侦察之后，聪明的小偷意识到“这个地方的所有房屋的排列类似于一棵二叉树”。 如果两个直接相连的房子在同一天晚上被打劫，房屋将自动报警。
+
+计算在不触动警报的情况下，小偷一晚能够盗取的最高金额。
+
+示例 1:
+输入: [3,2,3,null,3,null,1]
+
+     3
+    / \
+   2   3
+    \   \ 
+     3   1
+
+输出: 7 
+解释: 小偷一晚能够盗取的最高金额 = 3 + 3 + 1 = 7.
+
+示例 2:
+输入: [3,4,5,1,3,null,1]
+
+     3
+    / \
+   4   5
+  / \   \ 
+ 1   3   1
+
+输出: 9
+解释: 小偷一晚能够盗取的最高金额 = 4 + 5 = 9.
+```
+
+```java
+class Solution {
+    Map<TreeNode, Integer> mem = new HashMap<>();
+    public int rob(TreeNode root) {
+        if(root == null) return 0;
+        if(mem.containsKey(root)) return mem.get(root);
+        int robbed = root.val 
+                    + (root.left == null ? 0 : rob(root.left.left) + rob(root.left.right))
+                    + (root.right == null ? 0 : rob(root.right.left) + rob(root.right.right));
+        int notrobbed = rob(root.left) + rob(root.right);
+        int res = robbed > notrobbed ? robbed : notrobbed;
+        mem.put(root, res);
+        return res;
+    }
+}
+```
+
+涉及到树，因此必然使用遍历的手段完成，不再使用dp table。
+
+考虑到重复子问题，需要记录的是每个节点能打劫的最大金额，因此可以使用hashmap减少递归次数。
+
+总体思路不变，即站在某一个节点上，选择只有打劫和不打劫两种。打劫，则往下下层前进，不打劫，则往下一层前进，比较这两种获得的金额哪个更多。
+
+##### q121 买卖股票的最佳时机
+
+```
+给定一个数组，它的第 i 个元素是一支给定股票第 i 天的价格。
+如果你最多只允许完成一笔交易（即买入和卖出一支股票一次），设计一个算法来计算你所能获取的最大利润。
+注意：你不能在买入股票前卖出股票。
+
+示例 1:
+输入: [7,1,5,3,6,4]
+输出: 5
+解释: 在第 2 天（股票价格 = 1）的时候买入，在第 5 天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5 。
+     注意利润不能是 7-1 = 6, 因为卖出价格需要大于买入价格；同时，你不能在买入前卖出股票。
+
+
+示例 2:
+输入: [7,6,4,3,1]
+输出: 0
+解释: 在这种情况下, 没有交易完成, 所以最大利润为 0。
+```
+
+- 双指针：见双指针。
+
+- 动态规划
+
+  ```java
+  class Solution {
+      public int maxProfit(int[] prices) {
+          if(prices==null || prices.length == 0) return 0;
+          int n = prices.length;
+          int[][] dp = new int[n][2];
+  
+          dp[0][1] = -prices[0];
+          dp[0][0] = 0;
+          for(int i=1; i<n; i++) {
+              dp[i][1] = Math.max(dp[i-1][1], -prices[i]);
+              dp[i][0] = Math.max(dp[i-1][0], dp[i-1][1]+prices[i]);
+          }
+  
+          return dp[n-1][0];
+      }
+  }
+  ```
+
+  按照动态规划的思想解决，确定状态和选择。
+
+  选择有三种：买入、卖出、休息（不动）。
+
+  状态有三个：第i天，持有股票或是不持有股票，剩余的交易次数。
+
+  则`dp[i][j][1/0]`表示第i天，剩余j次交易次数时，持有股票或不持有股票的最大利润。
+
+  这道题交易次数固定为1。
+
+  `dp[i][1][1]`可以是前一天持有股票，然后选择休息，即`dp[i-1][1][1]`；也可以是前一天不持有股票，然后选择买入，即利润为`dp[i-1][0][0]-prices[i]=-prices[i]`，因为剩余0次交易次数，也不持有股票，利润为0。因此交易次数这个状态不影响结果，**主要是因为只能交易一次，买入之前都是不持有状态，利润为0，买入的这天利润为`-prices[i]`，如果有多次交易机会，利润才可以累积。**
+
+##### q122 买卖股票的最佳时机2
+
+```
+给定一个数组，它的第 i 个元素是一支给定股票第 i 天的价格。
+设计一个算法来计算你所能获取的最大利润。你可以尽可能地完成更多的交易（多次买卖一支股票）。
+注意：你不能同时参与多笔交易（你必须在再次购买前出售掉之前的股票）。
+```
+
+```java
+class Solution {
+    public int maxProfit(int[] prices) {
+        if(prices == null || prices.length == 0) return 0;
+        int n = prices.length;
+
+        int[][] dp = new int[n][2];
+        
+        dp[0][1] = -prices[0];
+        dp[0][0] = 0;
+
+        for(int i=1; i<n; i++) {
+            dp[i][1] = Math.max(dp[i-1][1], dp[i-1][0]-prices[i]);
+            dp[i][0] = Math.max(dp[i-1][0], dp[i-1][1]+prices[i]);
+        }
+
+        return dp[n-1][0];
+    }
+}
+```
+
+与q121的区别是不限交易次数。
+
+`dp[i][k][1]`可以是前一天持有股票，然后选择休息，即`dp[i-1][k][1]`；也可以是前一天不持有股票，然后选择买入，即利润为`dp[i-1][k-1][0]-prices[i]=dp[i-1][k][0]-prices[i]`，因为不限制交易次数，那么k-1和k其实没有区别。因此交易次数这个状态仍然不影响结果，**主要是因为可以交易多次，利润可以累积下来，每次买入时需要用已有利润减去当天的股价，即买入的这天利润为`dp[i-1][0]-prices[i]`。**
+
+##### 309 买卖股票的最佳时机含冷冻期
+
+```
+给定一个整数数组，其中第 i 个元素代表了第 i 天的股票价格 。​
+设计一个算法计算出最大利润。在满足以下约束条件下，你可以尽可能地完成更多的交易（多次买卖一支股票）:
+
+	你不能同时参与多笔交易（你必须在再次购买前出售掉之前的股票）。
+	卖出股票后，你无法在第二天买入股票 (即冷冻期为 1 天)。
+
+示例:
+输入: [1,2,3,0,2]
+输出: 3 
+解释: 对应的交易状态为: [买入, 卖出, 冷冻期, 买入, 卖出]
+```
+
+```java
+class Solution {
+    public int maxProfit(int[] prices) {
+        if(prices == null || prices.length == 0) return 0;
+        int n = prices.length;
+
+        int[][] dp = new int[n][2];
+        
+        dp[0][1] = -prices[0];
+        dp[0][0] = 0;
+
+        for(int i=1; i<n; i++) {
+            int t;
+            if(i==1) t = 0;
+            else t = dp[i-2][0];
+            dp[i][1] = Math.max(dp[i-1][1], t-prices[i]);
+            dp[i][0] = Math.max(dp[i-1][0], dp[i-1][1]+prices[i]);
+        }
+
+        return dp[n-1][0];
+    }
+}
+```
+
+仍然不限制交易次数，但是卖出后需要等一天才能买入。因此`dp[i][1]`要么为前一天持有股票即`dp[i-1][1]`，要么从不持有股票买入，但是需要为前两天即`dp[i-2][0]`，但不能为前一天不持有股票买入。
+
+##### q123 买卖股票的最佳时机3 &q188
+
+```
+给定一个数组，它的第 i 个元素是一支给定的股票在第 i 天的价格。
+设计一个算法来计算你所能获取的最大利润。你最多可以完成 两笔 交易。
+注意: 你不能同时参与多笔交易（你必须在再次购买前出售掉之前的股票）。
+
+示例 1:
+输入: [3,3,5,0,0,3,1,4]
+输出: 6
+解释: 在第 4 天（股票价格 = 0）的时候买入，在第 6 天（股票价格 = 3）的时候卖出，这笔交易所能获得利润 = 3-0 = 3 。
+     随后，在第 7 天（股票价格 = 1）的时候买入，在第 8 天 （股票价格 = 4）的时候卖出，这笔交易所能获得利润 = 4-1 = 3 。
+```
+
+```java
+class Solution {
+    public int maxProfit(int[] prices) {
+        if(prices == null || prices.length == 0) return 0;
+        int n = prices.length;
+        int max_k = 2;
+        int[][][] dp = new int[n][max_k+1][2];
+        
+        for(int i=0; i<n; i++) {
+            for(int k=max_k; k>=1; k--) {
+                if(i==0) {
+                    dp[i][k][1] = -prices[i];//第一天持有股票，利润必然为负。
+                    dp[i][k][0] = 0;
+                    continue;
+                }
+                dp[i][k][1] = Math.max(dp[i-1][k][1], dp[i-1][k-1][0] - prices[i]);
+                dp[i][k][0] = Math.max(dp[i-1][k][0], dp[i-1][k][1] + prices[i]);
+            }
+        }
+
+        return dp[n-1][max_k][0];
+    }
+}
+
+//或者数组长度多一点，无需在循环内初始化
+class Solution {
+    public int maxProfit(int[] prices) {
+        if(prices == null || prices.length == 0) return 0;
+        int n = prices.length;
+        int max_k = 2;
+        int[][][] dp = new int[n+1][max_k+1][2];
+        
+        for(int i=1; i<=n; i++) {
+            for(int k=max_k; k>=1; k--) {
+                dp[i][k][1] = Math.max(dp[i-1][k][1], dp[i-1][k-1][0] - prices[i-1]);
+                dp[i][k][0] = Math.max(dp[i-1][k][0], dp[i-1][k][1] + prices[i-1]);
+            }
+        }
+
+        return dp[n][max_k][0];
+    }
+}
+```
+
+限制了交易次数，最多完成k笔，因此交易次数k是一个需要考虑的状态。
+
+`dp[i][k][1]`可以是前一天持有股票，然后选择休息，即`dp[i-1][k][1]`；也可以是前一天不持有股票，然后选择买入，即利润为`dp[i-1][k-1][0]-prices[i]`，需要在买入或者卖出中间选择其中之一对交易次数k进行修正。
+
+由于k是一个需要考虑的状态，因此在迭代时需要穷举所有的可能。
+
+k过大时（测试用例的需要），会导致状态数组太庞大，实际上买入、卖出作为一次交易需要两天，因此数组元素/2即为最大有效交易次数，k超过它之后相当于没有交易次数限制，回到问题q122。
 
 #### 回溯问题：求所有可能情况
 
@@ -1181,6 +1826,69 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
   ![](img/leetcode/8-queens.png)
 
   原本以为这种做法应该会快一些，但实际上比较慢，无论是直接使用list容器操作还是数组中元素直接交换。一方面是需要列举所有列，无法像上面那样在放置过程中遇到不合法情况直接跳过，另一方面是容器的操作或者判断列是否存在同对角线的双层循环太耗时。
+
+##### q93 复原IP地址
+
+```
+给定一个只包含数字的字符串，复原它并返回所有可能的 IP 地址格式。
+有效的 IP 地址正好由四个整数（每个整数位于 0 到 255 之间组成），整数之间用 '.' 分隔。
+
+示例:
+输入: "25525511135"
+输出: ["255.255.11.135", "255.255.111.35"]
+```
+
+```java
+class Solution {
+    List<String> addrs = new ArrayList<>();
+    int[] segments = new int[4];
+
+    public List<String> restoreIpAddresses(String s) {
+        if (s == null || s.length() < 4) return new ArrayList<>();
+        backtrack(s, 0, 0);
+        return addrs;
+    }
+
+    private void backtrack(String s, int segId, int start) {
+        if (segId == 4) {
+            if (start == s.length()) {
+                String t = "";
+                for (int seg : segments) {
+                    t += seg + ".";
+                }
+                addrs.add(t.substring(0, t.length() - 1));
+            }
+            return;
+        }
+        if (start == s.length()) return;
+
+        if (s.charAt(start) == '0') {
+            segments[segId] = 0;
+            backtrack(s, segId + 1, start + 1);
+            return;
+        }
+
+        int addr = 0;
+        for (int end = start; end < s.length(); end++) {
+            addr = 10 * addr + (s.charAt(end) - '0');
+            if (addr >= 0 && addr <= 255) {
+                segments[segId] = addr;
+                backtrack(s, segId + 1, end + 1);
+            } else {
+                break;
+            }
+        }
+    }
+}
+```
+
+与普通回溯的模板写法不太一样，比较难理解。但确实是从字符串开头一位一位考虑，组成的数字是否能够继续回溯。
+
+例如25525511135，在第一层回溯中就是要遍历所有字符的。首先考虑2，2符合地址规范，因此进入start=end+1=0+1，即5525511135的情况。当这些情况因为不满足条件，最后返回到第一层时，考虑25，25符合地址规范，因此进入start=end+1=1+1，即525511135的情况。
+
+需要处理的特殊情况：如果出现0，那么它只能单独占一个段。
+
+编码上：使用数组保存正确的地址段，最终满足条件时再添加到结果列表，这样处理上比较清晰，而且避免很多无用操作。
 
 #### BFS：在图中求起点到终点的最短距离
 
@@ -2485,6 +3193,102 @@ class Solution {
 
 编程上的一个问题是，要求返回`int[][]`，如果初始化一个`List<List<Integer>>`对象似乎无法转换成要求的形式，因此初始化为`List<int[]>`对象。
 
+##### q435 无重叠区间
+
+```
+给定一个区间的集合，找到需要移除区间的最小数量，使剩余区间互不重叠。
+注意:
+	可以认为区间的终点总是大于它的起点。
+	区间 [1,2] 和 [2,3] 的边界相互“接触”，但没有相互重叠。
+	
+示例 1:
+输入: [ [1,2], [2,3], [3,4], [1,3] ]
+输出: 1
+解释: 移除 [1,3] 后，剩下的区间没有重叠。
+
+示例 2:
+输入: [ [1,2], [1,2], [1,2] ]
+输出: 2
+解释: 你需要移除两个 [1,2] 来使剩下的区间没有重叠。
+
+示例 3:
+输入: [ [1,2], [2,3] ]
+输出: 0
+解释: 你不需要移除任何区间，因为它们已经是无重叠的了。
+```
+
+```java
+class Solution {
+    public int eraseOverlapIntervals(int[][] intervals) {
+        if(intervals.length == 0 || intervals[0].length == 0) return 0;
+
+        Arrays.sort(intervals, new Comparator<int[]>(){
+            @Override
+            public int compare(int[] a, int[] b) {
+                return a[1] - b[1];
+            }
+        });
+
+        int res = 0;
+
+        for(int i=1, j=0; i<intervals.length; i++) {
+            if(intervals[i][0] < intervals[j][1]) {
+                res++;
+            } else {
+                j=i;
+            }
+        }
+
+        return res;
+    }
+}
+```
+
+首先按照区间终点进行排序，然后遍历，如果重叠，则需要去除一个区间，不重叠，则更新位置。
+
+##### 452 用最少的箭引爆气球
+
+```
+在二维空间中有许多球形的气球。对于每个气球，提供的输入是水平方向上，气球直径的开始和结束坐标。由于它是水平的，所以y坐标并不重要，因此只要知道开始和结束的x坐标就足够了。开始坐标总是小于结束坐标。平面内最多存在104个气球。
+
+一支弓箭可以沿着x轴从不同点完全垂直地射出。在坐标x处射出一支箭，若有一个气球的直径的开始和结束坐标为 xstart，xend， 且满足  xstart ≤ x ≤ xend，则该气球会被引爆。可以射出的弓箭的数量没有限制。 弓箭一旦被射出之后，可以无限地前进。我们想找到使得所有气球全部被引爆，所需的弓箭的最小数量。
+
+Example:
+输入:
+[[10,16], [2,8], [1,6], [7,12]]
+输出:
+2
+解释:
+对于该样例，我们可以在x = 6（射爆[2,8],[1,6]两个气球）和 x = 11（射爆另外两个气球）。
+```
+
+```
+class Solution {
+    public int findMinArrowShots(int[][] points) {
+        if(points.length == 0 || points[0].length == 0) return 0;
+
+        Arrays.sort(points, new Comparator<int[]>(){
+            @Override
+            public int compare(int[] a, int[] b) {
+                return a[1] - b[1];
+            }
+        });
+
+        int count = 1;
+        for(int i=1, j=0; i<points.length; i++) {
+            if(points[i][0] > points[j][1]) {
+                count++;
+                j = i;
+            } 
+        }
+
+        return count;
+    }
+}
+```
+
+最多有几个不重复的子区间，则需要几支箭。
+
 #### 字符串操作
 
 ##### q6 Z字形变换
@@ -3436,6 +4240,53 @@ class Solution {
   然后从第1行、第1列开始，根据保存好的信息设置。
 
   最后单独处理第0行，第0列。
+
+#### 二叉树
+
+##### q100 相同的树
+
+```
+给定两个二叉树，编写一个函数来检验它们是否相同。
+如果两个树在结构上相同，并且节点具有相同的值，则认为它们是相同的。
+
+示例 1:
+输入:       1         1
+          / \       / \
+         2   3     2   3
+
+        [1,2,3],   [1,2,3]
+输出: true
+
+示例 2:
+输入:      1          1
+          /           \
+         2             2
+
+        [1,2],     [1,null,2]
+输出: false
+
+示例 3:
+输入:       1         1
+          / \       / \
+         2   1     1   2
+
+        [1,2,1],   [1,1,2]
+输出: false
+```
+
+```java
+class Solution {
+    public boolean isSameTree(TreeNode p, TreeNode q) {
+        if(p == null && q == null) return true;
+        if(p==null || q==null) return false;
+        if(p!=null && q!=null && p.val != q.val) return false;
+        boolean flag = true;
+        if(flag) flag = isSameTree(p.left, q.left);
+        if(flag) flag = isSameTree(p.right, q.right);
+        return flag;
+    }
+}
+```
 
 #### 数学题
 

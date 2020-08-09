@@ -22,7 +22,7 @@ public class Q2Singleton {
 }
 ```
 
-初步创建单例模式：将构造函数设为私有的，添加一个静态的变量singleton，在静态方法中判断该变量是否为空，为空的时候创建一个实例。
+初步创建单例模式：**将构造函数设为私有的**，添加一个**静态的变量**singleton，在静态方法中判断该变量是否为空，为空的时候创建一个实例。
 
 用于多线程环境：创建实例的时候加上同步操作。
 
@@ -5268,6 +5268,7 @@ class Solution {
   ```java
   class Solution {
       public String reverseLeftWords(String s, int n) {
+          //注意n限制在1到字符串长度之间。因此不需要考虑取余。
           char[] chars = s.toCharArray();
           int len = chars.length;
           reverse(chars, 0, len-1);
@@ -5287,7 +5288,8 @@ class Solution {
       }
   }
   ```
-
+```
+  
   如abcde，k=2，翻转后变为edcba，再将前len-k个字符翻转、后k个字符翻转，变为cdeab。
 
 ### 59 滑动窗口的最大值
@@ -5330,7 +5332,7 @@ class Solution {
           return res;
       }
   }
-  ```
+```
 
 - 双向队列
 
