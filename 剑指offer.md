@@ -2475,6 +2475,38 @@ push(5), pop() -> 5, pop() -> 3, pop() -> 2, pop() -> 1
   顺序遍历popped，首先判断当前元素是否为栈顶元素，如果是就从栈顶弹出并检查下一个元素，否则将pushed数组中它之前的所有元素入栈，将一个标记指向它下一个元素，用于记录下次入栈元素的位置。
 
   当栈顶元素和当前检查元素不同，而popped中已经没有元素可以被压入栈时，说明不匹配，直接break。
+  
+  ```java
+  class Solution {
+      public boolean validateStackSequences(int[] pushed, int[] popped) {
+          Stack<Integer> stack = new Stack<>();
+  
+          int i = 0;
+          for(int num : pushed) {
+              stack.push(num);
+              while(!stack.isEmpty() && stack.peek() == popped[i]) {
+                  stack.pop();
+                  i++;
+              }
+          }
+  
+          return stack.isEmpty();
+      }
+  }
+  ```
+  
+  一种更清晰的思路，遍历pushed，首先压入栈，当栈顶元素和popped元素不相同时，继续压入栈。否则开始弹出，当最终栈为空时，说明匹配。
+  
+  ```
+  pushed:12345
+  popped:45321
+  
+  1入栈，1和4不相同，继续。
+  2入栈，2和4不相同，继续。
+  3入栈，3和4不相同，继续。
+  4入栈，4和4相同，于是4出栈，考虑popped下一个元素。
+  5入栈，5和5相同，于是5出栈，考虑popped下一个元素。栈顶元素3和3相同，于是3出栈，考虑popped下一个元素。以此类推
+  ```
 
 ### 32 从上到下打印二叉树
 
@@ -2758,6 +2790,27 @@ class Solution {
 ```
 
 二叉搜索树的后序遍历序列，数组的最后一个元素为根节点，且前边的元素分为小于根节点和大于根节点的连续的两部分，如果对已经认为是右子树的子数组进行遍历，发现了小于根节点的元素，说明这个序列不是后序遍历序列。找出两部分子数组，即左右子树，递归地进行判断，注意继续进行判断的条件，子数组中至少包含两个元素，一个元素的子树所有遍历序列都一样。
+
+```java
+class Solution {
+    public boolean verifyPostorder(int[] postorder) {
+        return verifyPostorder(postorder, 0, postorder.length-1);
+    }
+
+    private boolean verifyPostorder(int[] postorder, int left, int right) {
+        if(left >= right) return true;
+
+        int i = left;
+        while(postorder[i] < postorder[right]) i++;
+        int j = i;
+        while(postorder[j] > postorder[right]) j++;
+
+        return j==right && verifyPostorder(postorder, left, i-1) && verifyPostorder(postorder, i, j-1);
+    }
+}
+```
+
+思路与上面一致，但这个写法更容易理解一些。
 
 ### 34 二叉树中和为某一值的路径
 
