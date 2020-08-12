@@ -1113,7 +1113,7 @@ public class Q10 {
 
   注意之处：绳子长度本身为1、2、3时，最终结果应当为0、1、2。但是当绳子长度大于3时，计算过程中遇到的子绳子长度为1、2、3，它们应当为1、2、3。如长度为4，剪为1/3，乘积为3；剪为2/2，乘积为4。
 
-- 贪婪
+- 贪心
 
   ```java
   class Solution {
@@ -1626,26 +1626,26 @@ NFA是一个有向图，可以用有向图的模型来实现。这本书给出�
 
 - 双指针
 
-```java
-class Solution {
-    public int[] exchange(int[] nums) {
-        if(nums==null || nums.length==0) return new int[0];
-        int n = nums.length;
-        int left = 0, right = n-1;
+    ```java
+    class Solution {
+        public int[] exchange(int[] nums) {
+            if(nums==null || nums.length==0) return new int[0];
+            int n = nums.length;
+            int left = 0, right = n-1;
 
-        while(left<right) {
-            while(left<right && nums[left]%2!=0) left++;
-            while(left<right && nums[right]%2==0) right--;
-            if(left<right) {
-                int t = nums[left];
-                nums[left] = nums[right];
-                nums[right] = t;
+            while(left<right) {
+                while(left<right && nums[left]%2!=0) left++;
+                while(left<right && nums[right]%2==0) right--;
+                if(left<right) {
+                    int t = nums[left];
+                    nums[left] = nums[right];
+                    nums[right] = t;
+                }
             }
+            return nums;
         }
-        return nums;
     }
-}
-```
+    ```
 
 ### 22 链表中倒数第k个节点
 
@@ -1990,7 +1990,7 @@ B是A的子结构， 即 A中有出现和B相同的结构和节点值。
           if(A==null && B!=null) return false;
           if(A!=null && B!=null && B.val != A.val) return false;
           if(A==null && B==null || A!=null && B==null) return true;
-          return sub(A.left,B.left) && sub(A.right, B.right);
+          return sub(A.left, B.left) && sub(A.right, B.right);
       }
   }
   ```

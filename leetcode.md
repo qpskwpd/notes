@@ -1104,6 +1104,8 @@ class Solution {
 3	e	0	1	1	2	2	3
 ```
 
+##### q5 最长回文子串
+
 ##### 887 鸡蛋掉落
 
 ```
@@ -1553,6 +1555,122 @@ class Solution {
 由于k是一个需要考虑的状态，因此在迭代时需要穷举所有的可能。
 
 k过大时（测试用例的需要），会导致状态数组太庞大，实际上买入、卖出作为一次交易需要两天，因此数组元素/2即为最大有效交易次数，k超过它之后相当于没有交易次数限制，回到问题q122。
+
+#### 贪心问题
+
+##### q55 跳跃游戏
+
+```
+给定一个非负整数数组，你最初位于数组的第一个位置。
+
+数组中的每个元素代表你在该位置可以跳跃的最大长度。
+
+判断你是否能够到达最后一个位置。
+
+示例 1:
+
+输入: [2,3,1,1,4]
+输出: true
+解释: 我们可以先跳 1 步，从位置 0 到达 位置 1, 然后再从位置 1 跳 3 步到达最后一个位置。
+
+
+示例 2:
+
+输入: [3,2,1,0,4]
+输出: false
+解释: 无论怎样，你总会到达索引为 3 的位置。但该位置的最大跳跃长度是 0 ， 所以你永远不可能到达最后一个位置。
+```
+
+```java
+class Solution {
+    public boolean canJump(int[] nums) {
+        if(nums == null || nums.length == 0) return false;
+        int n = nums.length;
+        int farest = 0;
+
+        for(int i=0; i<n-1; i++) {
+            farest = Math.max(farest, i+nums[i]);
+            if(farest <= i) return false;
+        }
+
+        return farest >= n - 1; 
+    }
+}
+```
+
+每一步都计算能跳到的最远距离。如果在中间卡住了，返回false。最终看最远距离是否大于等于最后一个位置。
+
+##### 45 跳跃游戏2
+
+```
+给定一个非负整数数组，你最初位于数组的第一个位置。
+数组中的每个元素代表你在该位置可以跳跃的最大长度。
+你的目标是使用最少的跳跃次数到达数组的最后一个位置。
+
+示例:
+输入: [2,3,1,1,4]
+输出: 2
+解释: 跳到最后一个位置的最小跳跃数是 2。
+     从下标为 0 跳到下标为 1 的位置，跳 1 步，然后跳 3 步到达数组的最后一个位置。
+
+说明:
+假设你总是可以到达数组的最后一个位置。
+```
+
+- 动态规划
+
+  ```java
+  class Solution {
+      public int jump(int[] nums) {
+          if(nums == null || nums.length == 0) return 0;
+          int[] mem = new int[nums.length - 1];
+          return dp(nums, 0, mem);
+      }
+  
+      private int dp(int[] nums, int i, int[] mem) {
+          if(i >= nums.length - 1) return 0;
+          if(mem[i] != 0) return mem[i];
+          int min = nums.length;//因为n个位置最多需要跳n-1次
+          for(int j=1; j<=nums[i]; j++) {
+              min = Math.min(min, 1 + dp(nums, i + j, mem));
+          }
+          mem[i] = min;
+          return min;
+      }
+  }
+  ```
+
+  定义dp(i)为从第i个位置跳需要的最少次数。base case为当i到达最后一个位置时，需要次数为0。
+
+  接下来从第1个位置开始穷举可以跳的步数。
+
+- 贪心
+
+  ```java
+  class Solution {
+      public int jump(int[] nums) {
+          if(nums == null || nums.length == 0) return 0;
+  
+          int jumpIdx = 0, farest = 0, numOfJump = 0;
+          for(int i=0; i<nums.length-1; i++) {
+              farest = Math.max(farest, i+nums[i]);
+              if(i == jumpIdx) {
+                  numOfJump++;
+                  jumpIdx = farest;
+              }
+          }
+          return numOfJump;
+      }
+  }
+  ```
+
+  每次只选择跳得最远的地方作为起跳点，即用一个变量记录起跳点。
+
+  例如`2 3 1 1 4`，第一次起跳点为下标0，最远可以到达下标2，因此将下一次起跳点记为下标2。到达下标1后，最远可以到达下标4，当然还没到起跳点下标2，但实际上用farest变量保存了最远可以到达的位置。到达起跳点下标2后，最远位置不变，因此将下一次起跳点记位下标4，下标4其实已经是最后一个位置了。每次修改起跳点时将跳跃次数加1。
+
+  <img src="img/leetcode/45.jpg" style="zoom:50%;" />
+
+##### q763 划分字母区间
 
 #### 回溯问题：求所有可能情况
 
@@ -2167,6 +2285,141 @@ int BFS(Node start, Node target) {
       }
   ```
 
+#### 二分查找
+
+##### q1011 在D天内送达包裹的能力
+
+```
+传送带上的包裹必须在 D 天内从一个港口运送到另一个港口。
+
+传送带上的第 i 个包裹的重量为 weights[i]。每一天，我们都会按给出重量的顺序往传送带上装载包裹。我们装载的重量不会超过船的最大运载重量。
+
+返回能在 D 天内将传送带上的所有包裹送达的船的最低运载能力。
+
+示例 1：
+输入：weights = [1,2,3,4,5,6,7,8,9,10], D = 5
+输出：15
+解释：
+船舶最低载重 15 就能够在 5 天内送达所有包裹，如下所示：
+第 1 天：1, 2, 3, 4, 5
+第 2 天：6, 7
+第 3 天：8
+第 4 天：9
+第 5 天：10
+
+请注意，货物必须按照给定的顺序装运，因此使用载重能力为 14 的船舶并将包装分成 (2, 3, 4, 5), (1, 6, 7), (8), (9), (10) 是不允许的。
+```
+
+```java
+class Solution {
+    public int shipWithinDays(int[] weights, int D) {
+        int min = max(weights), max = sum(weights);
+
+        int left = min, right = max;
+        while(left < right) {
+            int mid = left + (right - left) / 2;
+            if(canFinish(weights, mid, D)) right = mid;
+            else left = mid + 1;
+        }
+        return left;
+    }
+
+    private boolean canFinish(int[] weights, int cap, int D) {
+        int i = 0;
+        for(int d=0; d<D; d++) {
+            int curCap = cap;
+            while(curCap - weights[i] >= 0) {
+                curCap -= weights[i];
+                i++;
+                if(i == weights.length) return true;
+            }
+        }
+        return false;
+    }
+    
+    private int max(int[] weights) {
+        int max = weights[0];
+        for(int i=1; i<weights.length; i++)
+            if(weights[i] > max) max = weights[i];
+        return max;
+    }
+
+    private int sum(int[] weights) {
+        int sum = 0;
+        for(int weight : weights)
+            sum += weight;
+        return sum;
+    }
+}
+```
+
+这类问题是先确定要搜索的上下界，对于这道题，船的容量至少为货物中的最大值，最大为所有货物的总和。接下来需要在这个范围内找到最低的运输能力。
+
+因为需要从下限到上限进行顺序遍历，这就是可以使用二分查找的信号。这道题相当于找到能完成运输任务的左边界，因此模板为寻找左边界的二分查找。不同之处在于，这类问题并没有一个target，因此在细节上，循环条件并不需要`left<=right`，缩减区间时也不需要`right = mid - 1`。
+
+另外问题的关键就是如何确定一个容量可以在D天内完成，这部分逻辑将因题而异。
+
+##### 875 爱吃香蕉的珂珂
+
+```
+珂珂喜欢吃香蕉。这里有 N 堆香蕉，第 i 堆中有 piles[i] 根香蕉。警卫已经离开了，将在 H 小时后回来。
+
+珂珂可以决定她吃香蕉的速度 K （单位：根/小时）。每个小时，她将会选择一堆香蕉，从中吃掉 K 根。如果这堆香蕉少于 K 根，她将吃掉这堆的所有香蕉，然后这一小时内不会再吃更多的香蕉。  
+
+珂珂喜欢慢慢吃，但仍然想在警卫回来前吃掉所有的香蕉。
+
+返回她可以在 H 小时内吃掉所有香蕉的最小速度 K（K 为整数）。
+
+示例 1：
+输入: piles = [3,6,7,11], H = 8
+输出: 4
+
+示例 2：
+输入: piles = [30,11,23,4,20], H = 5
+输出: 30
+
+示例 3：
+输入: piles = [30,11,23,4,20], H = 6
+输出: 23
+
+提示：
+	1 <= piles.length <= 10^4
+	piles.length <= H <= 10^9
+	1 <= piles[i] <= 10^9
+```
+
+```java
+class Solution {
+    public int minEatingSpeed(int[] piles, int H) {
+        int k = max(piles);
+        int left = 1, right = k;
+        while(left < right) {
+            int mid = left + (right - left) / 2;
+            if(canFinish(piles, mid, H)) right = mid;
+            else left = mid + 1;
+        }
+        return left;
+    }
+
+    private int max(int[] piles) {
+        int max = piles[0];
+        for(int i=1; i<piles.length; i++)
+            if(piles[i] > max) max = piles[i];
+        return max;
+    }
+
+    private boolean canFinish(int[] piles, int speed, int H) {
+        int totalTime = 0;
+        for(int pile : piles) {
+            totalTime += pile / speed + (pile % speed == 0 ? 0 : 1);
+        }
+        return totalTime <= H;
+    }
+}
+```
+
+
+
 #### 滑动窗口/双指针
 
 滑动窗口多为给出两个字符串，一个是模版，需要在另一个中匹配的问题。
@@ -2718,6 +2971,75 @@ for (int i = 0; i < len; i++) {
 
   这个问题的双指针运用更接近于典型字符串问题中的滑动窗口，即从同一侧开始移动，right指针只要和left指针的内容相同就右移，如果不同就停下来将left指针的内容更新，然后两个指针继续右移。
 
+##### q80 删除排序数组中的重复项2
+
+```
+给定一个排序数组，你需要在原地删除重复出现的元素，使得每个元素最多出现两次，返回移除后数组的新长度。
+不要使用额外的数组空间，你必须在原地修改输入数组并在使用 O(1) 额外空间的条件下完成。
+
+示例 1:
+给定 nums = [1,1,1,2,2,3],
+
+函数应返回新长度 length = 5, 并且原数组的前五个元素被修改为 1, 1, 2, 2, 3 。
+你不需要考虑数组中超出新长度后面的元素。
+```
+
+```java
+class Solution {
+    public int removeDuplicates(int[] nums) {
+        if(nums==null || nums.length == 0) return 0;
+        if(nums.length == 1) return 1;
+
+        int left=0, right =0;
+        boolean flag = false;
+        while(right < nums.length-1) {
+            right++;
+            if(nums[right] == nums[left] && !flag) {
+                flag = true;
+                left++;
+                nums[left] = nums[right];
+            }
+            if(nums[right] != nums[left]) {
+                left++;
+                nums[left] = nums[right];
+                flag = false;
+            }
+        }
+        return left+1;
+    }
+}
+```
+
+这个思路比较的是当前位置（right）和被覆盖的位置（left），用flag标记是否出现两次。
+
+```java
+class Solution {
+    public int removeDuplicates(int[] nums) {
+        if(nums==null || nums.length == 0) return 0;
+        if(nums.length == 1) return 1;
+
+        int left=0, right =0;
+        int count = 1;
+        while(right < nums.length-1) {
+            right++;
+            if(nums[right] == nums[right-1]) {
+                count++;
+            } else {
+                count = 1;
+            }
+            
+            if(count <= 2) {
+                left++;
+                nums[left] = nums[right];
+            }
+        }
+        return left+1;
+    }
+}
+```
+
+这个思路是比较当前位置（right）和前一个位置（right-1），用left记录下一个被覆盖的位置。count大于2时不会覆盖，遇到新的元素时将count设回1。
+
 ##### q42 接雨水
 
 ```
@@ -2732,7 +3054,7 @@ for (int i = 0; i < len; i++) {
 
 - 暴力解法：对于每个元素位置，向左向右寻找最大值，然后该列上能接的雨水为两边最大高度的较小值减去当前高度的值。
 
-- 动态编程：
+- 备忘录：
 
   ```java
   class Solution {
@@ -2891,6 +3213,97 @@ for (int i = 0; i < len; i++) {
   这道题与典型字符串问题中的滑动窗口模板类似，两个指针初始化为同一侧，记录和，当和大于等于目标值的时候更新结果，并缩小窗口。
 
   如果目标值大于数组中所有元素之和，那么res没有更新过，就返回0。
+
+##### 5 最长回文子串
+
+```
+给定一个字符串 s，找到 s 中最长的回文子串。你可以假设 s 的最大长度为 1000。
+
+示例 1：
+输入: "babad"
+输出: "bab"
+注意: "aba" 也是一个有效答案。
+
+示例 2：
+输入: "cbbd"
+输出: "bb"
+```
+
+- 双指针
+
+  ```java
+  class Solution {
+      public String longestPalindrome(String s) {
+          if(s == null || s.length() == 0) return "";
+          String res = "";
+  
+          for(int i=0; i<s.length(); i++) {
+              String s1 = palindrome(s, i, i);
+              String s2 = palindrome(s, i, i+1);
+              res = res.length() > s1.length() ? res : s1;
+              res = res.length() > s2.length() ? res : s2;
+          }
+  
+          return res;
+      }
+  
+      private String palindrome(String s, int i, int j) {
+          while(i >= 0 && j < s.length() && s.charAt(i) == s.charAt(j)) {
+              i--;
+              j++;
+          }
+          return s.substring(i+1, j);
+      }
+  }
+  ```
+
+  回文串可能是奇数长度（aba）也可能是偶数长度（abba），因此使用双指针是一个巧妙的解决方法。
+
+  获取回文串的函数为，对于中间某一个位置或两个位置，两个指针向两边扩散。
+
+  主函数中从左向右遍历原字符串，更新结果。
+
+- 动态规划
+
+  ```java
+  class Solution {
+      public String longestPalindrome(String s) {
+          int n = s.length();
+          if(n < 2) return s;
+          
+          char[] arr = s.toCharArray();
+          boolean[][] dp = new boolean[n][n];
+          int begin = 0;
+          int maxLen = 1;
+  
+          for(int i = 0; i<n; i++) dp[i][i] = true;
+  
+          for(int i = n-1; i >= 0; i--) {
+              for(int j = i + 1; j < n; j++) {
+                  if(arr[i] != arr[j]) {
+                      dp[i][j] = false;
+                  } else {
+                      if(j - i <= 2) dp[i][j] = true;
+                      else dp[i][j] = dp[i+1][j-1];
+                  }
+  
+                  if(dp[i][j] && j-i+1 >= maxLen) {
+                      begin = i;
+                      maxLen = j - i + 1;
+                  }
+              }
+          }
+  
+          return s.substring(begin, begin + maxLen);
+      }
+  }
+  ```
+
+  定义`dp[i][j]`为`s[i...j]`字串是否为回文串。如果`s[i]==s[j]`，那么取决于`s[i+1...j-1]`是否为回文串，即`dp[i][j] = s[i]==s[j] && dp[i+1][j-1]`。在这个定义中限定`i<j`，因此填写对角线以上的元素即可。
+
+  考虑边界情况，当字串长度为2或3时，只要`s[i]==s[j]`，那么`s[i..j]`就是回文串，如aba，aa。
+
+  要找最长的回文串，因此每判定一个字串为回文串时，如果长度更大，就更新结果。
 
 #### 快慢指针
 
@@ -4389,5 +4802,56 @@ k = 3
   }
   ```
 
-  
+
+##### q50 pow(x, n)
+
+```
+实现 pow(x, n) ，即计算 x 的 n 次幂函数。
+
+示例 1:
+输入: 2.00000, 10
+输出: 1024.00000
+
+示例 2:
+输入: 2.10000, 3
+输出: 9.26100
+
+示例 3:
+输入: 2.00000, -2
+输出: 0.25000
+解释: 2-2 = 1/22 = 1/4 = 0.25
+
+说明:
+	-100.0 < x < 100.0
+	n 是 32 位有符号整数，其数值范围是 [−231, 231 − 1] 。
+```
+
+```java
+class Solution {
+    public double myPow(double x, int n) {
+        if(x == 0) return 0;
+        if(n == 0) return 1;
+        if(n == 1) return x;
+        if(n == -1) return 1/x;
+
+        long N = n;
+        if(N < 0) return pow(1/x, -N);
+        return pow(x, N);
+    }
+
+    private double pow(double a, long b){
+        if(b == 0) return 1;
+        if(b == 1) return a;
+
+        if(b % 2 == 1) {
+            return a * pow(a, b-1);
+        } else {
+            double sub = pow(a, b/2);
+            return sub * sub;
+        }
+    }
+}
+```
+
+使用快速求幂算法，注意n为-2147483648时取反会变成0，因此使用一个long类型接收。
 
