@@ -532,6 +532,128 @@
 
   关键在于首先沿着链表延伸到最后一个节点，然后沿着递归树往回爬时更新连接，这个过程其实并没有用到返回的节点，因此最终返回的就是最后一个节点，也就是逆转后的头节点。
 
+##### 回文链表
+
+```
+编写一个函数，检查输入的链表是否是回文的。
+
+示例 1：
+输入： 1->2
+输出： false 
+
+示例 2：
+输入： 1->2->2->1
+输出： true 
+
+进阶：
+你能否用 O(n) 时间复杂度和 O(1) 空间复杂度解决此题？
+```
+
+```java
+class Solution {
+    public boolean isPalindrome(ListNode head) {
+        StringBuilder sb = new StringBuilder();
+        StringBuilder sbr = new StringBuilder();
+        ListNode h = head;
+        while(h!= null) {
+            sb.append(h.val);
+            h = h.next;
+        }
+        head = reverse(head);
+        while(head != null) {
+            sbr.append(head.val);
+            head = head.next;
+        }
+
+        return sb.toString().equals(sbr.toString());
+    }
+
+    private ListNode reverse(ListNode h) {
+        if(h == null) return null;
+        if(h.next == null) return h;
+        ListNode rt = reverse(h.next);
+        h.next.next = h;
+        h.next = null;
+        return rt;
+    }
+}
+```
+
+先遍历一遍链表并记录，完整地反转链表，再遍历一遍链表并记录，比较两个记录。
+
+```java
+class Solution {
+    public boolean isPalindrome(ListNode head) {
+        if(head == null || head.next == null) return true;
+
+        ListNode slow = head;
+        ListNode fast = head.next;
+
+        while(fast != null) {
+            slow = slow.next;
+            fast = fast.next;
+            if(fast != null) fast = fast.next;
+        }
+
+        ListNode last = reverse(slow);
+        while(head != last) {
+            if(head.val != last.val) return false;
+            if(head.next != null) head = head.next;
+            if(last.next != null) last = last.next;
+        }
+        return true;
+    }
+
+    private ListNode reverse(ListNode h) {
+        if(h == null) return null;
+        if(h.next == null) return h;
+        ListNode rt = reverse(h.next);
+        h.next.next = h;
+        h.next = null;
+        return rt;
+    }
+    
+    private ListNode reverse(ListNode h) {
+        ListNode pre = null, cur = h;
+        ListNode next;
+        while(cur != null) {
+            next = cur.next;
+            cur.next = pre;
+            pre = cur;
+            cur = next;
+        }
+        return pre;
+    }
+}
+```
+
+使用快慢指针先找到中间节点，然后翻转后面的部分链表。然后从两头遍历并比较。
+
+偶数长度的链表翻转之后会变成1->2<-2<-1，第1个2的next会指向null，因此这点需要注意。
+
+翻转链表的部分使用迭代实现即可达到`O(1)`的空间复杂度。
+
+```java
+class Solution {
+    ListNode left;
+    public boolean isPalindrome(ListNode head) {
+		left = head;
+		return isPalindromeR(head);
+	}
+	
+	private boolean isPalindromeR(ListNode x) {
+		if(x == null) return true;
+		boolean res;
+		res = isPalindromeR(x.next);
+		res = res && (x.val == left.val);
+		left = left.next;
+		return res;
+	}
+}
+```
+
+利用后序遍历，定义一个全局的左指针，比较左右两个值是否相同。
+
 #### 动态规划：求最值
 
 特点：求最优解；整体问题的最优解依赖于各个子问题的最优解；大问题分解为小问题，小问题间存在重叠的更小的子问题；从上往下分析问题，从下往上求解问题。
@@ -4855,3 +4977,89 @@ class Solution {
 
 使用快速求幂算法，注意n为-2147483648时取反会变成0，因此使用一个long类型接收。
 
+##### 645 错误的集合
+
+```
+集合 S 包含从1到 n 的整数。不幸的是，因为数据错误，导致集合里面某一个元素复制了成了集合里面的另外一个元素的值，导致集合丢失了一个整数并且有一个元素重复。
+
+给定一个数组 nums 代表了集合 S 发生错误后的结果。你的任务是首先寻找到重复出现的整数，再找到丢失的整数，将它们以数组的形式返回。
+
+示例 1:
+输入: nums = [1,2,2,4]
+输出: [2,3]
+
+注意:
+	给定数组的长度范围是 [2, 10000]。
+	给定的数组是无序的。
+```
+
+```java
+class Solution {
+    public int[] findErrorNums(int[] nums) {
+        int n = nums.length;
+        int[] res = new int[2];
+
+        for(int i=0; i<n; i++) {
+            int index = Math.abs(nums[i])-1;
+            if(nums[index] > 0) {
+                nums[index] *= -1;
+            } else {
+                res[0] = index+1;
+            }
+        }
+
+        for(int i=0; i <n; i++) {
+            if(nums[i] > 0) {
+                res[1] = i + 1;
+            }
+        }
+
+        return res;
+    }
+}
+```
+
+主要思路为用数值当作索引来用，当一个索引第一次出现时，将它的值取反，当重复的索引出现时，发现值已经为负，因此就找到了重复的值。
+
+接下来缺失的元素即为值仍然为正的索引。
+
+```
+ 0	1	2
+[2	3	2]
+首先遇到2，因此得到索引2-1=1，将3取反，变为[2	-3	2]
+然后遇到3（通过取绝对值），因此得到索引3-1=2，将2取反，变成[2 -3	-2]
+然后遇到2，因此得到索引2-1=1，发现已经为-3，因此重复元素就是1+1=2。
+
+找缺失元素时，索引0的元素为正，说明缺失的元素为0+1=1。
+这里因为数值在1-n，而索引在0-n-1，因此需要有转换过程。
+```
+
+```java
+class Solution {
+    public int[] findErrorNums(int[] nums) {
+        int n = nums.length;
+        int[] res = new int[2];
+        quick(nums);
+
+        for(int i=0; i<n-1; i++) {
+            if(nums[i] == nums[i+1]) {
+                res[0] = nums[i];
+            }
+            if(nums[i]+1 < nums[i+1]){
+                res[1] = nums[i]+1;
+            }
+        }
+
+        if(nums[0]!=1) res[1] = 1;
+        else if(nums[n-1]!=n) res[1] = n;
+
+        return res;
+    }
+}
+```
+
+使用排序。重复的元素好找。找缺失的元素分为三种情况：
+
+- 缺头，如[2344]，直接判断首元素
+- 缺尾，如[1233]，直接判断尾元素
+- 缺中间，如[1244]，在找重复的元素时同时进行，缺中间的情况会出现后一个元素比前一个元素大2的情况。
