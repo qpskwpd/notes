@@ -532,6 +532,139 @@
 
   关键在于首先沿着链表延伸到最后一个节点，然后沿着递归树往回爬时更新连接，这个过程其实并没有用到返回的节点，因此最终返回的就是最后一个节点，也就是逆转后的头节点。
 
+##### q92 反转链表2
+
+```
+反转从位置 m 到 n 的链表。请使用一趟扫描完成反转。
+
+说明:
+1 ≤ m ≤ n ≤ 链表长度。
+
+示例:
+输入: 1->2->3->4->5->NULL, m = 2, n = 4
+输出: 1->4->3->2->5->NULL
+```
+
+```java
+class Solution {
+    public ListNode reverseBetween(ListNode head, int m, int n) {
+        ListNode h = head, before = null;
+        int i = 1;
+        while(i != m) {
+            if(i+1 == m) before = h;
+            h = h.next;
+            i++;
+        }
+
+        ListNode newHead = reverse(h, n-m);
+        if(before != null) {
+            before.next = newHead;
+            return head;
+        }
+        return newHead;
+    }
+
+    ListNode after = null;
+
+    private ListNode reverse(ListNode x, int k) {
+        if(k==0) {
+            after = x.next;
+            return x;
+        }
+        ListNode p = reverse(x.next, k-1);
+        x.next.next = x;
+        x.next = after;
+        return p;
+    }
+}
+```
+
+采用递归形式翻转链表，需要在到达翻转的最后一个节点时记录一下后驱节点。以便退回到第一个节点时将它指向后驱节点。
+
+<img src="img/leetcode/92.png" style="zoom:50%;" />
+
+这里使用循环找到第m个节点，同时考虑了前驱节点。
+
+```java
+class Solution {
+    public ListNode reverseBetween(ListNode head, int m, int n) {
+        if(m == 1) return reverse(head, n-m);
+        head.next = reverseBetween(head.next, m-1, n-1);
+        return head;
+    }
+
+    ListNode after = null;
+    private ListNode reverse(ListNode x, int k) {
+        if(k==0) {
+            after = x.next;
+            return x;
+        }
+        ListNode p = reverse(x.next, k-1);
+        x.next.next = x;
+        x.next = after;
+        return p;
+    }
+}
+```
+
+也可以利用递归思想解决，m==1则直接翻转，否则可以递归地解决后面的链表。
+
+##### q25 K个一组翻转链表
+
+```
+给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。
+k 是一个正整数，它的值小于或等于链表的长度。
+如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
+
+示例：
+给你这个链表：1->2->3->4->5
+当 k = 2 时，应当返回: 2->1->4->3->5
+当 k = 3 时，应当返回: 3->2->1->4->5
+
+说明：
+	你的算法只能使用常数的额外空间。
+	你不能只是单纯的改变节点内部的值，而是需要实际进行节点交换。
+```
+
+```java
+class Solution {
+    public ListNode reverseKGroup(ListNode head, int k) {
+        if(head == null) return null;
+        ListNode a = head, b = head;
+        for(int i=0; i<k; i++) {
+            if(b == null) return a;
+            b = b.next;
+        }
+
+        ListNode newHead = reverse(a, b);
+        a.next = reverseKGroup(b, k);
+        return newHead;
+    }
+
+    private ListNode reverse(ListNode a, ListNode b) {
+        ListNode pre = null, cur = a;
+        ListNode next;
+        while(cur != b) {
+            next = cur.next;
+            cur.next = pre;
+            pre = cur;
+            cur = next;
+        }
+        return pre;
+    }
+}
+```
+
+它是一个可以递归解决的问题，翻转了前k个元素之后，剩余的链表仍然需要解决。
+
+关键在于搞清楚连接的情况。
+
+<img src="img/leetcode/25.png" style="zoom:50%;" />
+
+K个一组，因此可以选好头尾，a和b。然后在区间a和b进行翻转，返回新的链表头。连接时，需要当前的链表头a指向下一遍递归后返回的新的链表头。而这个下一遍递归则是以当前的链表尾b继续进行K个一组的翻转。
+
+basecase为不满K个时直接返回当前的链表头a。
+
 ##### 回文链表
 
 ```
@@ -1159,7 +1292,7 @@ class Solution {
 }
 ```
 
-##### 1143 最长公共子序列
+##### q1143 最长公共子序列
 
 ```
 给定两个字符串 text1 和 text2，返回这两个字符串的最长公共子序列的长度。
@@ -1228,7 +1361,7 @@ class Solution {
 
 ##### q5 最长回文子串
 
-##### 887 鸡蛋掉落
+##### q887 鸡蛋掉落
 
 ```
 你将获得 K 个鸡蛋，并可以使用一栋从 1 到 N  共有 N 层楼的建筑。
@@ -1571,7 +1704,7 @@ class Solution {
 
 `dp[i][k][1]`可以是前一天持有股票，然后选择休息，即`dp[i-1][k][1]`；也可以是前一天不持有股票，然后选择买入，即利润为`dp[i-1][k-1][0]-prices[i]=dp[i-1][k][0]-prices[i]`，因为不限制交易次数，那么k-1和k其实没有区别。因此交易次数这个状态仍然不影响结果，**主要是因为可以交易多次，利润可以累积下来，每次买入时需要用已有利润减去当天的股价，即买入的这天利润为`dp[i-1][0]-prices[i]`。**
 
-##### 309 买卖股票的最佳时机含冷冻期
+##### q309 买卖股票的最佳时机含冷冻期
 
 ```
 给定一个整数数组，其中第 i 个元素代表了第 i 天的股票价格 。​
@@ -1722,7 +1855,7 @@ class Solution {
 
 每一步都计算能跳到的最远距离。如果在中间卡住了，返回false。最终看最远距离是否大于等于最后一个位置。
 
-##### 45 跳跃游戏2
+##### q45 跳跃游戏2
 
 ```
 给定一个非负整数数组，你最初位于数组的第一个位置。
@@ -2296,116 +2429,122 @@ int BFS(Node start, Node target) {
 输出：-1
 ```
 
-- BFS解法：
+```java
+class Solution {
+    public int openLock(String[] deadends, String target) {
+        Set<String> deads = new HashSet<>();
+        for(String deadend : deadends) 
+            deads.add(deadend);
+        Set<String> visited = new HashSet<>();
+        Queue<String> queue = new LinkedList<>();
 
-  ```java
-  class Solution {
-      public int openLock(String[] deadends, String target) {
-          Set<String> deads = new HashSet<>();
-          for(String deadend : deadends) 
-              deads.add(deadend);
-          Set<String> visited = new HashSet<>();
-          Queue<String> queue = new LinkedList<>();
-  
-          String cur = "0000";
-          queue.add(cur);
-          visited.add(cur);
-          int steps = 0;
-  
-          while(!queue.isEmpty()) {
-              int sz = queue.size();
-              for (int i=0; i<sz; i++) {
-                  cur = queue.poll();
-                  if(deads.contains(cur))
-                      continue;
-                  if(cur.equals(target))
-                      return steps;
-                  for(int j=0; j<4; j++) {
-                      String up = plusOne(cur, j);
-                      if(!visited.contains(up)) {
-                          queue.add(up);
-                          visited.add(up);
-                      }
-                      String down = minusOne(cur, j);
-                      if(!visited.contains(down)) {
-                          queue.add(down);
-                          visited.add(down);
-                      }
-                  }
-              }
-              steps++;
-          }
-          return -1;
-      }
-  
-      public String plusOne(String cur, int j) {
-          char[] chars = cur.toCharArray();
-          if (chars[j] == '9')
-              chars[j] = '0';
-          else
-              chars[j] += 1;
-          return new String(chars);    
-      }
-  
-      public String minusOne(String cur, int j) {
-          char[] chars = cur.toCharArray();
-          if (chars[j] == '0')
-              chars[j] = '9';
-          else
-              chars[j] -= 1;
-          return new String(chars);    
-      }
-  }
-  ```
+        String cur = "0000";
+        queue.add(cur);
+        visited.add(cur);
+        int steps = 0;
 
-- 双向BFS
+        while(!queue.isEmpty()) {
+            int sz = queue.size();
+            for (int i=0; i<sz; i++) {
+                cur = queue.poll();
+                if(deads.contains(cur))
+                    continue;
+                if(cur.equals(target))
+                    return steps;
+                for(int j=0; j<4; j++) {
+                    String up = plusOne(cur, j);
+                    if(!visited.contains(up)) {
+                        queue.add(up);
+                        visited.add(up);
+                    }
+                    String down = minusOne(cur, j);
+                    if(!visited.contains(down)) {
+                        queue.add(down);
+                        visited.add(down);
+                    }
+                }
+            }
+            steps++;
+        }
+        return -1;
+    }
 
-  ```java
-  	public int openLock(String[] deadends, String target) {
-          Set<String> deads = new HashSet<>();
-          for (String s : deadends) deads.add(s);
-          // 用集合不用队列，可以快速判断元素是否存在
-          Set<String> q1 = new HashSet<>();
-          Set<String> q2 = new HashSet<>();
-          Set<String> visited = new HashSet<>();
-  
-          int step = 0;
-          q1.add("0000");
-          q2.add(target);
-  
-          while (!q1.isEmpty() && !q2.isEmpty()) {
-              // 哈希集合在遍历的过程中不能修改，用 temp 存储扩散结果
-              Set<String> temp = new HashSet<>();
-  
-              /* 将 q1 中的所有节点向周围扩散 */
-              for (String cur : q1) {
-                  /* 判断是否到达终点 */
-                  if (deads.contains(cur))
-                      continue;
-                  if (q2.contains(cur))
-                      return step;
-                  visited.add(cur);
-  
-                  /* 将一个节点的未遍历相邻节点加入集合 */
-                  for (int j = 0; j < 4; j++) {
-                      String up = plusOne(cur, j);
-                      if (!visited.contains(up))
-                          temp.add(up);
-                      String down = minusOne(cur, j);
-                      if (!visited.contains(down))
-                          temp.add(down);
-                  }
-              }
-              /* 在这里增加步数 */
-              step++;
-              // temp 相当于 q1
-              // 这里交换 q1 q2，下一轮 while 就是扩散 q2
-              q1 = q2;
-              q2 = temp;
-          }
-          return -1;
-      }
-  ```
+    public String plusOne(String cur, int j) {
+        char[] chars = cur.toCharArray();
+        if (chars[j] == '9')
+            chars[j] = '0';
+        else
+            chars[j] += 1;
+        return new String(chars);    
+    }
+
+    public String minusOne(String cur, int j) {
+        char[] chars = cur.toCharArray();
+        if (chars[j] == '0')
+            chars[j] = '9';
+        else
+            chars[j] -= 1;
+        return new String(chars);    
+    }
+}
+```
+
+##### q733 图像渲染
+
+```
+有一幅以二维整数数组表示的图画，每一个整数表示该图画的像素值大小，数值在 0 到 65535 之间。
+
+给你一个坐标 (sr, sc) 表示图像渲染开始的像素值（行 ，列）和一个新的颜色值 newColor，让你重新上色这幅图像。
+
+为了完成上色工作，从初始坐标开始，记录初始坐标的上下左右四个方向上像素值与初始坐标相同的相连像素点，接着再记录这四个方向上符合条件的像素点与他们对应四个方向上像素值与初始坐标相同的相连像素点，……，重复该过程。将所有有记录的像素点的颜色值改为新的颜色值。
+
+最后返回经过上色渲染后的图像。
+
+示例 1:
+输入: 
+image = [[1,1,1],[1,1,0],[1,0,1]]
+sr = 1, sc = 1, newColor = 2
+输出: [[2,2,2],[2,2,0],[2,0,1]]
+解析: 
+在图像的正中间，(坐标(sr,sc)=(1,1)),
+在路径上所有符合条件的像素点的颜色都被更改成2。
+注意，右下角的像素没有更改为2，
+因为它不是在上下左右四个方向上与初始点相连的像素点。
+
+注意:
+	image 和 image[0] 的长度在范围 [1, 50] 内。
+	给出的初始点将满足 0 <= sr < image.length 和 0 <= sc < image[0].length。
+	image[i][j] 和 newColor 表示的颜色值在范围 [0, 65535]内。
+```
+
+```java
+class Solution {
+    public int[][] floodFill(int[][] image, int sr, int sc, int newColor) {
+        int h = image.length, w = image[0].length;
+        boolean[][] visited = new boolean[h][w];
+        Queue<int[]> queue = new LinkedList<>();
+        queue.add(new int[]{sr, sc});
+        int srcColor = image[sr][sc];
+
+        while(!queue.isEmpty()) {
+            int[] pos = queue.poll();
+            int x = pos[0], y = pos[1];
+            visited[x][y] = true;
+            image[x][y] = newColor;
+            if(x-1 >=0 && !visited[x-1][y] && image[x-1][y]==srcColor)
+                queue.add(new int[]{x-1, y});
+            if(x+1 <h && !visited[x+1][y] && image[x+1][y]==srcColor)
+                queue.add(new int[]{x+1, y});
+            if(y-1 >=0 && !visited[x][y-1] && image[x][y-1]==srcColor)
+                queue.add(new int[]{x, y-1});
+            if(y+1 <w && !visited[x][y+1] && image[x][y+1]==srcColor)
+                queue.add(new int[]{x, y+1});
+        }
+
+        return image;
+    }
+}
+```
 
 #### 二分查找
 
@@ -4823,6 +4962,69 @@ class Solution {
 }
 ```
 
+##### q222 完全二叉树的节点个数
+
+```
+给出一个完全二叉树，求出该树的节点个数。
+
+说明：
+完全二叉树的定义如下：在完全二叉树中，除了最底层节点可能没填满外，其余每层节点数都达到最大值，并且最下面一层的节点都集中在该层最左边的若干位置。若最底层为第 h 层，则该层包含 1~ 2h 个节点。
+
+示例:
+输入: 
+    1
+   / \
+  2   3
+ / \  /
+4  5 6
+
+输出: 6
+```
+
+- 通用法
+
+  ```java
+  class Solution {
+      public int countNodes(TreeNode root) {
+          if(root == null) return 0;
+          return 1+countNodes(root.left)+countNodes(root.right);
+      }
+  }
+  ```
+
+  求树的节点个数的通用法，O(N)时间复杂度。
+
+- 运用完全二叉树的特性
+
+  ```java
+  class Solution {
+      public int countNodes(TreeNode root) {
+          int l = 0, r = 0;
+          TreeNode left = root, right = root;
+  
+          while(left!=null) {
+              left = left.left;
+              l++;
+          }
+  
+          while(right!=null) {
+              right = right.right;
+              r++;
+          }
+  
+          if(l == r) {
+              return (int)Math.pow(2, l) - 1;
+          }
+  
+          return 1 + countNodes(root.left) + countNodes(root.right);
+      }
+  }
+  ```
+
+  当不满足满二叉树时按通用法计算，而完全二叉树一定有一边是满二叉树，满二叉树的节点数目可以直接通过公式计算。计算子树的节点数目时，它仍然成立，因此也不会出现`x == null`的情况。
+
+  <img src="img/leetcode/222.png" style="zoom:50%;" />
+
 #### 数学题
 
 ##### q1666 跳水板
@@ -4977,7 +5179,7 @@ class Solution {
 
 使用快速求幂算法，注意n为-2147483648时取反会变成0，因此使用一个long类型接收。
 
-##### 645 错误的集合
+##### q645 错误的集合
 
 ```
 集合 S 包含从1到 n 的整数。不幸的是，因为数据错误，导致集合里面某一个元素复制了成了集合里面的另外一个元素的值，导致集合丢失了一个整数并且有一个元素重复。
@@ -5063,3 +5265,32 @@ class Solution {
 - 缺头，如[2344]，直接判断首元素
 - 缺尾，如[1233]，直接判断尾元素
 - 缺中间，如[1244]，在找重复的元素时同时进行，缺中间的情况会出现后一个元素比前一个元素大2的情况。
+
+##### q382 链表随机节点
+
+```
+给你⼀个未知⻓度的链表，请你设计⼀个算法，只能遍历⼀次，随机地返回链表中的⼀个节点。
+```
+
+```java
+public int getRandom() {
+    int i = 1, res = 0;
+    Random random = new Random();
+    while(head != null) {
+        int j = random.nextInt(i++);
+        if(j == 0) {
+            res = head.val;
+        }
+        head = head.next;
+    }
+    return res;
+}
+```
+
+水塘抽样算法：当遇到第  i  个元素时，应该有 1/i 的概率选择该元素，1-1/i 的概率保持原有的选择。证明：
+
+<img src="img/leetcode/382.png" style="zoom:50%;" />
+
+代码实现上，遍历到第i个元素，则生成一个`[0,i)`的随机数，则1/i的概率就等于随机数为0的概率。
+
+如遍历到第2个元素，生成一个`[0,2)`的随机数，为0或1，则随机数为0的概率为1/2。
