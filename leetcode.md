@@ -1944,52 +1944,6 @@ def backtrack(路径, 选择列表):
         撤销选择
 ```
 
-##### q46 全排列
-
-```
-给定一个 没有重复 数字的序列，返回其所有可能的全排列。
-
-示例:
-输入: [1,2,3]
-输出:
-[
-  [1,2,3],
-  [1,3,2],
-  [2,1,3],
-  [2,3,1],
-  [3,1,2],
-  [3,2,1]
-]
-```
-
-- 暴力解法：
-
-  ```java
-  class Solution {
-      List<List<Integer>> res = new LinkedList<>();
-      public List<List<Integer>> permute(int[] nums) {
-          LinkedList<Integer> track = new LinkedList<>();
-          backtrace(nums, track);
-          return res;
-      }
-  
-      public void backtrace(int[] nums, LinkedList<Integer> track) {
-          if (track.size() == nums.length) {
-              res.add(new LinkedList<Integer>(track));
-              return;
-          }
-  
-          for (int i = 0; i < nums.length; i++) {
-              if (track.contains(nums[i]))
-                  continue;
-              track.add(nums[i]);
-              backtrace(nums, track);
-              track.removeLast();
-          }
-      }
-  }
-  ```
-
 ##### q51 N皇后
 
 ```
@@ -2199,6 +2153,227 @@ n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并
   ![](img/leetcode/8-queens.png)
 
   原本以为这种做法应该会快一些，但实际上比较慢，无论是直接使用list容器操作还是数组中元素直接交换。一方面是需要列举所有列，无法像上面那样在放置过程中遇到不合法情况直接跳过，另一方面是容器的操作或者判断列是否存在同对角线的双层循环太耗时。
+
+##### 78 子集
+
+```
+给定一组不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。
+说明：解集不能包含重复的子集。
+
+示例:
+输入: nums = [1,2,3]
+输出:
+[
+  [3],
+  [1],
+  [2],
+  [1,2,3],
+  [1,3],
+  [2,3],
+  [1,2],
+  []
+]
+```
+
+```java
+class Solution {
+    List<List<Integer>> res = new ArrayList<>();
+    public List<List<Integer>> subsets(int[] nums) {
+        List<Integer> track = new ArrayList<>();
+        backtrack(nums, 0, track);
+        return res;
+    }
+
+    private void backtrack(int[] nums, int start, List<Integer> track) {
+        res.add(new ArrayList<Integer>(track));
+        for(int i = start; i < nums.length; i++) {
+            track.add(nums[i]);
+            backtrack(nums, i + 1, track);
+            track.remove(track.size() - 1);
+        }
+    }
+}
+```
+
+##### q90 子集2
+
+```
+给定一个可能包含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。
+
+说明：解集不能包含重复的子集。
+
+示例:
+
+输入: [1,2,2]
+输出:
+[
+  [2],
+  [1],
+  [1,2,2],
+  [2,2],
+  [1,2],
+  []
+]
+```
+
+```java
+class Solution {
+    List<List<Integer>> res = new ArrayList<>();
+    public List<List<Integer>> subsetsWithDup(int[] nums) {
+        List<Integer> track = new ArrayList<>();
+        Arrays.sort(nums);
+        backtrack(nums, 0, track);
+        return res;
+    }
+
+    private void backtrack(int[] nums, int start, List<Integer> track) {
+        res.add(new ArrayList(track));
+        for(int i = start; i < nums.length; i++) {
+            if(i - 1 >= start && nums[i] == nums[i-1]) continue;
+            track.add(nums[i]);
+            backtrack(nums, i + 1, track);
+            track.remove(track.size() - 1);
+        }
+    }
+}
+```
+
+由于包含重复元素，需要在每一层递归的循环中，跳过重复元素，为此需要首先将数组排序。
+
+##### q77 组合
+
+```
+给定两个整数 n 和 k，返回 1 ... n 中所有可能的 k 个数的组合。
+
+示例:
+输入: n = 4, k = 2
+输出:
+[
+  [2,4],
+  [3,4],
+  [2,3],
+  [1,2],
+  [1,3],
+  [1,4],
+]
+```
+
+```java
+class Solution {
+    List<List<Integer>> res = new ArrayList<>();
+    public List<List<Integer>> combine(int n, int k) {
+        List<Integer> track = new ArrayList<>();
+        backtrack(n, k, 1, track);
+        return res;
+    }
+
+    private void backtrack(int n, int k, int start, List<Integer> track) {
+        if(track.size() == k) {
+            res.add(new ArrayList(track));
+            return;
+        }
+        for(int i = start; i <= n; i++) {
+            track.add(i);
+            backtrack(n, k, i+1, track);
+            track.remove(track.size() - 1);
+        }
+    }
+}
+```
+
+##### q46 全排列
+
+```
+给定一个 没有重复 数字的序列，返回其所有可能的全排列。
+
+示例:
+输入: [1,2,3]
+输出:
+[
+  [1,2,3],
+  [1,3,2],
+  [2,1,3],
+  [2,3,1],
+  [3,1,2],
+  [3,2,1]
+]
+```
+
+```java
+class Solution {
+    List<List<Integer>> res = new LinkedList<>();
+    public List<List<Integer>> permute(int[] nums) {
+        LinkedList<Integer> track = new LinkedList<>();
+        backtrace(nums, track);
+        return res;
+    }
+
+    public void backtrace(int[] nums, LinkedList<Integer> track) {
+        if (track.size() == nums.length) {
+            res.add(new LinkedList<Integer>(track));
+            return;
+        }
+
+        for (int i = 0; i < nums.length; i++) {
+            if (track.contains(nums[i]))
+                continue;
+            track.add(nums[i]);
+            backtrace(nums, track);
+            track.removeLast();
+        }
+    }
+}
+```
+
+##### 47 全排列2
+
+```
+给定一个可包含重复数字的序列，返回所有不重复的全排列。
+
+示例:
+
+输入: [1,1,2]
+输出:
+[
+  [1,1,2],
+  [1,2,1],
+  [2,1,1]
+]
+```
+
+```java
+class Solution {
+    List<List<Integer>> res = new ArrayList<>();
+    public List<List<Integer>> permuteUnique(int[] nums) {
+        List<Integer> track = new ArrayList<>();
+        Arrays.sort(nums);
+        boolean[] used = new boolean[nums.length];
+        backtrack(nums, track, used);
+        return res;
+    }
+
+    private void backtrack(int[] nums, List<Integer> track, boolean[] used) {
+        if(track.size() == nums.length) {
+            res.add(new ArrayList(track));
+            return;
+        }
+        
+        for(int i = 0; i < nums.length; i++) {
+            if(used[i]) continue;
+            if(i-1>=0 && nums[i] == nums[i-1] && !used[i-1]) continue;
+            used[i] = true;
+            track.add(nums[i]);
+            backtrack(nums, track, used);
+            track.remove(track.size() - 1);
+            used[i] = false;
+        }
+    }
+}
+```
+
+由于包含重复元素，但结果中不能包含重复排列，因此需要剪枝。剪枝的条件最好是画出递归树，判断什么时候会出现重复。
+
+<img src="img/leetcode/47.png" style="zoom: 67%;" />
 
 ##### q93 复原IP地址
 
@@ -4175,6 +4350,81 @@ class Solution {
   来源：力扣（LeetCode）
   著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 
+##### 最小唯一前缀
+
+```
+给定一组个字符串，为每个字符串找出能够唯一识别该字符串的最小前缀。 
+
+输入描述:
+第一行输入一个整数 n 表示字符串个数
+后面n行，每行一个字符串，一共n串互不相同的字符串。（2 <= n <= 100，字符串长度不超过100）
+
+输出描述:
+输出n行，每行一个字符串，依次是每个字符串的最小可唯一识别前缀
+
+输入例子1:
+5
+meituanapp
+meituanwaimai
+dianpingliren
+dianpingjiehun
+mt
+
+输出例子1:
+meituana
+meituanw
+dianpingl
+dianpingj
+mt
+```
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int N = sc.nextInt();
+        String[] strs = new String[N];
+        for (int i = 0; i < N; i++) {
+            strs[i] = sc.next();
+        }
+
+        String[] prefix = findPrefix(strs);
+        for (String s : prefix) {
+            System.out.println(s);
+        }
+    }
+
+    private static String[] findPrefix(String[] strs) {
+        String[] res = new String[strs.length];
+
+        for (int i = 0; i < strs.length; i++) {
+            int maxMatch = 0;
+            int len1 = strs[i].length();
+            for (int j = 0; j < strs.length; j++) {
+                if (i == j) continue;
+                int len2 = strs[j].length();
+                int match = 0;
+                while (match < len1 && match < len2 && strs[i].charAt(match) == strs[j].charAt(match)) match++;
+                if (match >= maxMatch) {
+                    maxMatch = match;
+                    if(maxMatch == len1)
+                        res[i] = strs[i].substring(0, maxMatch);
+                    else
+                        res[i] = strs[i].substring(0, maxMatch + 1);
+                }
+            }
+        }
+        return res;
+    }
+}
+```
+
+将每一个字符串与其他字符逐字符比较，找到一个最大的匹配长度。
+
+特殊情况是存在完全相同的字符串，此时最大匹配长度将等于字符串长度。
+
 #### 数字操作
 
 ##### q7 整数反转
@@ -5024,6 +5274,249 @@ class Solution {
   当不满足满二叉树时按通用法计算，而完全二叉树一定有一边是满二叉树，满二叉树的节点数目可以直接通过公式计算。计算子树的节点数目时，它仍然成立，因此也不会出现`x == null`的情况。
 
   <img src="img/leetcode/222.png" style="zoom:50%;" />
+
+##### q109 有序链表转换二叉搜索树
+
+```
+给定一个单链表，其中的元素按升序排序，将其转换为高度平衡的二叉搜索树。
+
+本题中，一个高度平衡二叉树是指一个二叉树每个节点 的左右两个子树的高度差的绝对值不超过 1。
+
+示例:
+
+给定的有序链表： [-10, -3, 0, 5, 9],
+
+一个可能的答案是：[0, -3, 9, -10, null, 5], 它可以表示下面这个高度平衡二叉搜索树：
+
+      0
+     / \
+   -3   9
+   /   /
+ -10  5
+```
+
+```java
+class Solution {
+    public TreeNode sortedListToBST(ListNode head) {
+        return build(head, null);
+    }
+
+    private TreeNode build(ListNode left, ListNode right) {
+        if(left == right) return null;
+        ListNode mid = getMid(left, right);
+        TreeNode x = new TreeNode(mid.val);
+        x.left = build(left, mid);
+        x.right = build(mid.next, right);
+        return x;
+    }
+
+    private ListNode getMid(ListNode head, ListNode tail) {
+        if(head == null) return null;
+        ListNode slow = head, fast = head;
+
+        while(fast != tail && fast.next != tail) {
+            slow = slow.next;
+            fast = fast.next;
+            fast = fast.next;
+        }
+        return slow;
+    }
+}
+```
+
+分治思想，因为链表是有序的，而且要转换成高度平衡的树，因此可以每次找到链表的中间节点，然后递归地构造左右子树，即节点左边的链表和右边的链表。
+
+##### q95 不同的二叉搜索树 II
+
+```
+给定一个整数 n，生成所有由 1 ... n 为节点所组成的 二叉搜索树 。
+
+示例：
+输入：3
+输出：
+[
+  [1,null,3,2],
+  [3,2,null,1],
+  [3,1,null,null,2],
+  [2,1,3],
+  [1,null,2,null,3]
+]
+解释：
+以上的输出对应以下 5 种不同结构的二叉搜索树：
+
+   1         3     3      2      1
+    \       /     /      / \      \
+     3     2     1      1   3      2
+    /     /       \                 \
+   2     1         2                 3
+
+提示：
+	0 <= n <= 8
+```
+
+```java
+class Solution {
+    public List<TreeNode> generateTrees(int n) {
+        if(n == 0) return new ArrayList<>();
+        List<TreeNode> res = build(1, n);
+        return res;
+    }
+
+    private List<TreeNode> build(int left, int right) {
+        List<TreeNode> trees = new ArrayList<>();
+        if(left > right){
+            trees.add(null);
+            return trees;
+        }
+        if(left == right) {
+            trees.add(new TreeNode(left));
+            return trees;
+        }
+        for(int i=left; i<=right; i++) {
+            List<TreeNode> leftTrees = build(left, i-1);
+            List<TreeNode> rightTrees = build(i+1, right);
+
+            for(TreeNode l : leftTrees) {
+                for(TreeNode r : rightTrees) {
+                    TreeNode root = new TreeNode(i);
+                    root.left = l;
+                    root.right = r;
+                    trees.add(root);
+                }
+            }
+        }
+        return trees;
+        
+    }
+}
+```
+
+分治思想，枚举1~n每个数作为根节点时的情况。如枚举k时，它的左子树可以是1~k-1所有的情况，右子树可以是k+1~n所有的情况。枚举完所有的左右子树，将它们两两组合拼接到根节点的左右连接上。
+
+##### q96 不同的二叉搜索树
+
+```
+给定一个整数 n，求以 1 ... n 为节点组成的二叉搜索树有多少种？
+
+示例:
+
+输入: 3
+输出: 5
+解释:
+给定 n = 3, 一共有 5 种不同结构的二叉搜索树:
+
+   1         3     3      2      1
+    \       /     /      / \      \
+     3     2     1      1   3      2
+    /     /       \                 \
+   2     1         2                 3
+```
+
+- 动态规划
+
+  ```java
+  class Solution {
+      public int numTrees(int n) {
+          int[] dp = new int[n+1];
+          dp[0] = 1;
+          dp[1] = 1;
+  
+          for(int i = 2; i <= n; i++)
+              for(int j = 1; j <= i; j++) 
+                  dp[i] += dp[j-1] * dp[i-j];
+                  
+          return dp[n];
+      }
+  }
+  ```
+
+  设$$G(n)$$表示长度为n时可以构成的二叉搜索树个数，$$F(i)$$表示以i为根节点时可以构成的二叉搜索树个数。
+
+  则$$G(n)=F(1)+F(2)+...+F(n)$$。
+
+  而$$F(i)=G(i-1)\times G(n-i)$$。
+
+  因此$$G(n)=G(1-1)\times G(n-1)+G(2-1)\times G(n-2) +...+G(n-1)\times G(n-n)$$。
+
+##### q98 验证二叉搜索树
+
+```
+给定一个二叉树，判断其是否是一个有效的二叉搜索树。
+
+假设一个二叉搜索树具有如下特征：
+
+
+	节点的左子树只包含小于当前节点的数。
+	节点的右子树只包含大于当前节点的数。
+	所有左子树和右子树自身必须也是二叉搜索树。
+
+
+示例 1:
+
+输入:
+    2
+   / \
+  1   3
+输出: true
+
+
+示例 2:
+
+输入:
+    5
+   / \
+  1   4
+     / \
+    3   6
+输出: false
+解释: 输入为: [5,1,4,null,null,3,6]。
+     根节点的值为 5 ，但是其右子节点值为 4 。
+```
+
+- 中序遍历
+
+  ```java
+  class Solution {
+      public boolean isValidBST(TreeNode root) {
+          List<Integer> inOrder = new ArrayList<>();
+          inOrder(root, inOrder);
+          for(int i=1; i<inOrder.size(); i++) {
+              if(inOrder.get(i) <= inOrder.get(i-1)) return false;
+          }
+          return true;
+      }
+  
+      private void inOrder(TreeNode root, List<Integer> inOrder) {
+          if(root == null) return;
+          inOrder(root.left, inOrder);
+          inOrder.add(root.val);
+          inOrder(root.right, inOrder);
+      }
+  }
+  ```
+
+  给出二叉搜索树的题目可以先想一想中序遍历能否解决问题，因为中序遍历是一个升序序列。这样虽然耗时耗空间，但算是最简单的思路。
+
+- 递归
+
+  ```java
+  class Solution {
+      public boolean isValidBST(TreeNode root) {
+          if(root == null) return true;
+          double ninf = -Double.MAX_VALUE;
+          double inf = Double.MAX_VALUE;
+          return helper(root, ninf, inf);
+      }
+  
+      private boolean helper(TreeNode root, double lowerBound, double higherBound) {
+          if(root == null) return true;
+          if(root.val <= lowerBound || root.val >= higherBound) return false;
+          return helper(root.left, lowerBound, root.val) && helper(root.right, root.val, higherBound);
+      }
+  }
+  ```
+
+  由于二叉搜索树左边的节点均小于根节点，右边的节点均大于根节点，因此可以将这个信息通过递归传递下去，即定义一个函数，它带有两个参数下界和上界。当前的节点的值如果不在这个范围内则返回false。通过递归地检查左子树和右子树进行判断，检查左子树时，上界改为当前节点的值，检查右子树时，下界改为当前节点的值。
 
 #### 数学题
 

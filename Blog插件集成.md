@@ -97,8 +97,6 @@ server:
 </configuration>
 ```
 
-
-
 ##### QUESTIONS
 
 Q1：重写springboot对日志文件的xml配置后怎么与application.yml对应起来
@@ -569,7 +567,7 @@ QUESTIONS AND SOLUTIONS
     List<Type> findTop(Pageable pageable);
     ```
 
-    这个查询的条件应该是jpa的写法，即不管数据库中表名具体是什么，写它对应的实体类名称即可。
+    这个查询的条件应该是jpa的写法，即不管数据库中表名具体是什么，写它对应的实体类名称即可（hql）。
 
     ```java
     @Override
@@ -720,7 +718,7 @@ Data truncation: Incorrect string value: '\xE6\xB5\x8B\xE8\xAF\x95' for column '
 
 这是因为数据库的编码问题，database和server的编码方式与其他几个不同。实际上连接数据库的时候指定了编码格式，本地好用，但Linux下不好用，可能与MariaDB有关?
 
-<img src="img/blog/数据库编码问题.png" style="zoom:50%;" />
+<img src="img/blog/数据库编码问题.png" style="zoom: 80%;" />
 
 进入/etc/my.cnf。
 
