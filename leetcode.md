@@ -665,6 +665,40 @@ K个一组，因此可以选好头尾，a和b。然后在区间a和b进行翻转
 
 basecase为不满K个时直接返回当前的链表头a。
 
+##### q203 移除链表元素
+
+```
+删除链表中等于给定值 val 的所有节点。
+
+示例:
+
+输入: 1->2->6->3->4->5->6, val = 6
+输出: 1->2->3->4->5
+```
+
+```java
+class Solution {
+    public ListNode removeElements(ListNode head, int val) {
+        if(head == null) return null;
+        while(head != null && head.val == val){
+            head = head.next;
+        }
+        ListNode h = head;
+
+        while(h != null && h.next != null) {
+            ListNode t = h.next;
+            while(t != null && t.val == val) t = t.next;
+            h.next = t;
+            h = t;
+        }
+
+        return head;
+    }
+}
+```
+
+首先需要排除掉链表开头与给定值相同的元素，接下来正常删除节点即可。
+
 ##### 回文链表
 
 ```
@@ -786,6 +820,308 @@ class Solution {
 ```
 
 利用后序遍历，定义一个全局的左指针，比较左右两个值是否相同。
+
+##### q817 链表组件
+
+```
+给定链表头结点 head，该链表上的每个结点都有一个 唯一的整型值 。
+
+同时给定列表 G，该列表是上述链表中整型值的一个子集。
+
+返回列表 G 中组件的个数，这里对组件的定义为：链表中一段最长连续结点的值（该值必须在列表 G 中）构成的集合。
+
+示例 1：
+输入: 
+head: 0->1->2->3
+G = [0, 1, 3]
+输出: 2
+解释: 
+链表中,0 和 1 是相连接的，且 G 中不包含 2，所以 [0, 1] 是 G 的一个组件，同理 [3] 也是一个组件，故返回 2。
+
+示例 2：
+输入: 
+head: 0->1->2->3->4
+G = [0, 3, 1, 4]
+输出: 2
+解释: 
+链表中，0 和 1 是相连接的，3 和 4 是相连接的，所以 [0, 1] 和 [3, 4] 是两个组件，故返回 2。
+
+提示：
+	如果 N 是给定链表 head 的长度，1 <= N <= 10000。
+	链表中每个结点的值所在范围为 [0, N - 1]。
+	1 <= G.length <= 10000
+	G 是链表中所有结点的值的一个子集.
+```
+
+- 暴力法
+
+  ```java
+  class Solution {
+      public int numComponents(ListNode head, int[] G) {
+          int count = 0;
+          boolean conn = false;
+  
+          while(head != null) {
+              boolean exist = exist(head.val, G);
+              if(exist && !conn){
+                  count++;
+                  conn = true;
+              } else if(exist) {
+                  head = head.next;
+                  continue;
+              } else {
+                  conn = false;
+              }
+              head = head.next;
+          }
+          return count;
+      }
+  
+      private boolean exist(int val, int[] G) {
+          for(int num : G) {
+              if(val == num) return true;
+          }
+          return false;
+      }
+  }
+  ```
+
+  遍历链表，判断每个元素是否在数组内。同时用一个bool变量记录当前是否处于连续状态。
+
+- 使用set保存G
+
+  ```java
+  class Solution {
+      public int numComponents(ListNode head, int[] G) {
+          int count = 0;
+          Set<Integer> set = new HashSet<>();
+          for(int num : G) set.add(num);
+  
+          while(head != null) {
+              if(set.contains(head.val) && (head.next == null || !set.contains(head.next.val))) count++;
+              head = head.next;
+          }
+          return count;
+      }
+  }
+  ```
+
+  使用set保存G，当前元素在set中而下一个元素不在set中，则组件+1。
+
+##### q725 分隔链表
+
+```
+给定一个头结点为 root 的链表, 编写一个函数以将链表分隔为 k 个连续的部分。
+
+每部分的长度应该尽可能的相等: 任意两部分的长度差距不能超过 1，也就是说可能有些部分为 null。
+
+这k个部分应该按照在链表中出现的顺序进行输出，并且排在前面的部分的长度应该大于或等于后面的长度。
+
+返回一个符合上述规则的链表的列表。
+
+举例： 1->2->3->4, k = 5 // 5 结果 [ [1], [2], [3], [4], null ]
+
+示例 1：
+输入: 
+root = [1, 2, 3], k = 5
+输出: [[1],[2],[3],[],[]]
+解释:
+输入输出各部分都应该是链表，而不是数组。
+例如, 输入的结点 root 的 val= 1, root.next.val = 2, \root.next.next.val = 3, 且 root.next.next.next = null。
+第一个输出 output[0] 是 output[0].val = 1, output[0].next = null。
+最后一个元素 output[4] 为 null, 它代表了最后一个部分为空链表。
+
+
+示例 2：
+输入: 
+root = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], k = 3
+输出: [[1, 2, 3, 4], [5, 6, 7], [8, 9, 10]]
+解释:
+输入被分成了几个连续的部分，并且每部分的长度相差不超过1.前面部分的长度大于等于后面部分的长度。
+
+提示:
+	root 的长度范围： [0, 1000].
+	输入的每个节点的大小范围：[0, 999].
+	k 的取值范围： [1, 50].
+```
+
+- 乱解
+
+  ```java
+  class Solution {
+      public ListNode[] splitListToParts(ListNode root, int k) {
+          int len = 0;
+          ListNode h = root;
+          while(h != null) {
+              len++;
+              h = h.next;
+          }
+  
+          ListNode[] res = new ListNode[k];
+  
+          int seg = k >= len ? 1 : len / k;
+          int mod = len % k;
+  
+          h = root;
+          int i = 0;
+          while(h != null) {
+              res[i++] = h;
+              int j = 1;
+              if(k < len && mod > 0) {
+                  while(j++ < seg+1) h = h.next;
+                  mod--;
+              } else while(j++ < seg) h = h.next;
+              
+              ListNode cur = h;
+              h = h.next;
+              cur.next = null;
+          }
+  
+          return res;
+      }
+  }
+  ```
+
+  首先统计链表长度，然后确认每个位置应该放多长的子链表。
+
+  k>=len表示位置太多，每个位置放一个节点即可。
+
+  k<len则需要考虑每个位置平均放多长，然后为了平衡，需要考虑余数，并将它分摊到每一次放置中。因此k<len是一个需要判断的条件。
+
+  实际操作时，遍历链表，每达到平均长度，就将next指针设置为null。
+
+##### q86 分隔链表
+
+```
+给定一个链表和一个特定值 x，对链表进行分隔，使得所有小于 x 的节点都在大于或等于 x 的节点之前。
+
+你应当保留两个分区中每个节点的初始相对位置。
+
+示例:
+输入: head = 1->4->3->2->5->2, x = 3
+输出: 1->2->2->4->3->5
+```
+
+```java
+class Solution {
+    public ListNode partition(ListNode head, int x) {
+        if(head == null) return null;
+        ListNode before = new ListNode(-1);
+        ListNode after = new ListNode(-1);
+        ListNode b = before, a = after;
+
+        while(head != null) {
+            if(head.val < x) {
+                b.next = head;
+                b = b.next;
+                ListNode cur = head;
+                head = head.next;
+                cur.next = null;
+            } else {
+                a.next = head;
+                a = a.next;
+                ListNode cur = head;
+                head = head.next;
+                cur.next = null;
+            }
+        }
+
+        b.next = after.next;
+        return before.next;
+    }
+}
+```
+
+使用两个哑节点，一个连接小于给定值的节点，另一个连接大于等于给定值的节点，最后将这两个链表连接起来。
+
+```
+head = 1->4->3->2->5->2, x = 3
+l1 = -1->1->2->2
+l2 = -1->4->3->5
+```
+
+##### q143 重排链表
+
+```
+给定一个单链表 L：L0→L1→…→Ln-1→Ln ，
+将其重新排列后变为： L0→Ln→L1→Ln-1→L2→Ln-2→…
+
+你不能只是单纯的改变节点内部的值，而是需要实际的进行节点交换。
+
+示例 1:
+给定链表 1->2->3->4, 重新排列为 1->4->2->3.
+
+示例 2:
+给定链表 1->2->3->4->5, 重新排列为 1->5->2->4->3.
+```
+
+- 显式栈
+
+  ```java
+  class Solution {
+      public void reorderList(ListNode head) {
+          if(head == null) return;
+          Deque<ListNode> stack = new LinkedList<>();
+          ListNode h = head;
+          while(h!=null) {
+              stack.push(h);
+              h = h.next;
+          }
+          h = head;
+          ListNode pop;
+          while(h != (pop = stack.peek())) {
+              ListNode next = h.next;
+              if(next == pop) break;
+              pop = stack.pop();
+              h.next = pop;
+              pop.next = next;
+              h = next;
+          }
+          if(h == stack.peek())
+              h.next = null;
+          else
+              h.next.next = null;
+      }
+  }
+  ```
+
+  使用显式栈保存逆序元素，奇数情况下会遇到当前节点与栈顶元素相同的情况，偶数情况下遇到下一个元素与栈顶元素相同的情况。
+
+  这两种情况分别处理即可，即将最后一个元素的next指向null。
+
+- 递归
+
+  ```java
+  class Solution {
+      ListNode left;
+      public void reorderList(ListNode head) {
+          if(head == null || head.next == null) return;
+          this.left = head;
+          reorder(head, 0);
+      }
+  
+      private void reorder(ListNode head, int depth) {
+          if(head == null) return;
+          reorder(head.next, depth + 1);
+          if(left == null) return;
+          if(depth > 0 && (left == head || left.next == head)) {
+              head.next = null;
+              left = null;
+              return;
+          }
+          ListNode next = left.next;
+          head.next = left.next;
+          left.next = head;
+          left = next;
+      }
+  }
+  ```
+
+  保存全局的节点指针left，递归，从最后一个节点开始处理连接关系。
+
+  仍然是当left与当前节点相同（奇数情况），或left.next与当前节点相同（偶数情况）时，说明到达最后一个节点，将next指针设为null，同时将left设为null，并以此条件终止更早的递归，因为前边的节点都不需要再处理了。
+
+  由于开始时left就与当前节点相同，因此额外加了一个变量记录递归深度，当不是第一层递归时再判断。
 
 #### 动态规划：求最值
 
@@ -4111,7 +4447,7 @@ Example:
 对于该样例，我们可以在x = 6（射爆[2,8],[1,6]两个气球）和 x = 11（射爆另外两个气球）。
 ```
 
-```
+```java
 class Solution {
     public int findMinArrowShots(int[][] points) {
         if(points.length == 0 || points[0].length == 0) return 0;
@@ -4137,6 +4473,71 @@ class Solution {
 ```
 
 最多有几个不重复的子区间，则需要几支箭。
+
+##### 最大重叠区间个数
+
+```
+[1,5][3,7][4,9][8,10]，最大重叠区间个数为3
+```
+
+```java
+package exam0821;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Scanner;
+
+public class MaxIntervals {
+
+    static class Intervals {
+        int time;
+        boolean isStart;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        int T = sc.nextInt();
+
+        while (T-- > 0) {
+            int N = sc.nextInt();
+            Intervals[] intervals = new Intervals[2 * N];
+            for (int i = 0; i < intervals.length; i++) {
+                intervals[i] = new Intervals();
+            }
+            int c = 0;
+            for (int i = 0; i < N; i++) {
+                intervals[c].time = sc.nextInt();
+                intervals[c++].isStart = true;
+                intervals[c].time = sc.nextInt();
+                intervals[c++].isStart = false;
+            }
+            Arrays.sort(intervals, new Comparator<Intervals>() {
+                @Override
+                public int compare(Intervals o1, Intervals o2) {
+                    return o1.time - o2.time;
+                }
+            });
+            int res = 0, count = 0;
+            for (Intervals interval : intervals) {
+                if (interval.isStart == true) count++;
+                else count--;
+                res = Math.max(res, count);
+            }
+            System.out.println(res);
+        }
+    }
+}
+```
+
+将每个区间的端点分离来看待，使用一个新的结构记录它是否为起点。
+
+然后将所有端点排序，每遇到一个起点，计数+1，计数的最大值即为重叠区间的最大个数。
+
+```
+[1 3 4 5 7 8 9 10]
+[t t t f f t f f]
+```
 
 #### 字符串操作
 
@@ -5517,6 +5918,95 @@ class Solution {
   ```
 
   由于二叉搜索树左边的节点均小于根节点，右边的节点均大于根节点，因此可以将这个信息通过递归传递下去，即定义一个函数，它带有两个参数下界和上界。当前的节点的值如果不在这个范围内则返回false。通过递归地检查左子树和右子树进行判断，检查左子树时，上界改为当前节点的值，检查右子树时，下界改为当前节点的值。
+
+##### q114 二叉树展开为链表
+
+```
+给定一个二叉树，原地将它展开为一个单链表。
+
+例如，给定二叉树
+
+    1
+   / \
+  2   5
+ / \   \
+3   4   6
+
+将其展开为：
+
+1
+ \
+  2
+   \
+    3
+     \
+      4
+       \
+        5
+         \
+          6
+```
+
+```java
+class Solution {
+    public void flatten(TreeNode root) {
+        if(root == null) return;
+        TreeNode leftTreeRight = getRight(root.left);
+        if(leftTreeRight != null){
+            leftTreeRight.right = root.right;
+            root.right = root.left;
+            root.left = null;
+        }
+        flatten(root.right);
+    }
+
+    private TreeNode getRight(TreeNode root) {
+        if(root == null) return null;
+        while(root.right != null) {
+            root = root.right;
+        }
+        return root;
+    }
+}
+```
+
+可以看到结果是前序遍历的结果，如果使用额外的空间，可以用一个list记录前序遍历的节点，然后修改指针。
+
+如果边遍历边修改，可以每次先找到左子树中最右边的节点，若它存在，则将右子树接到它的右节点，然后更新左右指针。
+
+这个过程如下：
+
+```
+    1
+   / \
+  2   5
+ / \   \
+3   4   6
+
+    1
+     \
+      2          
+     / \          
+    3   4  
+         \
+          5
+           \
+            6
+            
+    1
+     \
+      2          
+       \          
+        3      
+         \
+          4  
+           \
+            5
+             \
+              6         
+```
+
+
 
 #### 数学题
 
