@@ -128,7 +128,8 @@
 ##### Vector
 
 - 大部分方法与ArrayList一致，但是都是同步方法。
-- 迭代器Enumeration是快速失败的。当然后来新加了iterator迭代器。
+- 迭代器Enumeration不是快速失败的，对于并发时的修改没有反应。当然后来新加了iterator迭代器。
+  - 快速失败：当迭代器创建后，除了迭代器的方法，列表被修改时会抛出异常。
 
 ##### LinkedList
 
