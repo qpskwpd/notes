@@ -3,7 +3,7 @@
 ```java
 public class Q2Singleton {
 
-    private static Q2Singleton singleton;
+    private static volatile Q2Singleton singleton;
     private static Object object;
     
     private Q2Singleton() {
