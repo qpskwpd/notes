@@ -1706,8 +1706,7 @@ NFA是一个有向图，可以用有向图的模型来实现。这本书给出�
           if(head == null || k <= 0) return null;
           ListNode left = head;
           ListNode right = head;
-          int i = 0;
-          for(; i < k - 1; i++) {
+          for(int i = 0; i < k - 1; i++) {
               if(right == null) break;
               right = right.next;
           }
