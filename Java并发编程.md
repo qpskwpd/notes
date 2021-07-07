@@ -82,7 +82,6 @@
       |  偏向锁  |        加锁和解锁不需要额外的消耗        | 如果线程之间存在锁竞争，会带来额外的锁撤销的消耗（不竞争就不会释放锁） |       只有一个线程访问同步块       |
       | 轻量级锁 | 竞争的线程不会阻塞，提高了程序的响应速度 |        如果始终得不到锁竞争的线程，使用自旋会消耗CPU         | 追求响应时间，同步块执行速度非常快 |
       | 重量级锁 |     线程竞争不使用自旋，不会消耗CPU      |                    线程阻塞，响应时间缓慢                    |   追求吞吐量，同步块执行速度较慢   |
-  
 ##### 2.3 原子操作
 
 * 处理器使用缓存锁定或总线锁定的方式保证复杂内存操作的原子性。
@@ -103,7 +102,6 @@
     * 只能保证一个共享变量的原子操作：解决方法为使用锁或将多个共享变量合并成一个共享变量。类：AtomicReference。
 
    * JVM实现了多种锁，如偏向锁、轻量级锁和互斥锁。除了偏向锁，其他锁的实现都用到了循环CAS，即当一个线程进入同步块时，使用循环CAS的方式来获取锁，退出同步块时使用循环CAS释放锁。Q：释放锁为什么不会直接成功？
-  
 ### 第三章
 
 ##### 3.1 Java内存模型
@@ -283,3 +281,192 @@
   - JMM不保证对64位的long型和double型变量的写操作具有原子性，而顺序一致性模型保证对所有的内存
 
     读/写操作都具有原子性。
+
+##### 3.4 volatile的内存语义
+
+- volatile的特性
+
+  理解volatile特性的一个好方法是把对volatile变量的单个读/写，看成是使用同一个锁对这些单个读/写操作做了同步。
+
+  ```java
+  class VolatileFeaturesExample {
+  	volatile long vl = 0L; // 使用volatile声明64位的long型变量
+      public void set(long l) {
+      	vl = l; // 单个volatile变量的写
+      }
+      public void getAndIncrement () {
+      	vl++; // 复合（多个）volatile变量的读/写
+      }
+      public long get() {
+      	return vl; // 单个volatile变量的读
+      }
+  }
+  
+  class VolatileFeaturesExample {
+      long vl = 0L; // 64位的long型普通变量
+      public synchronized void set(long l) { // 对单个的普通变量的写用同一个锁同步
+      	vl = l;
+      }
+      public void getAndIncrement () { // 普通方法调用
+          long temp = get(); // 调用已同步的读方法
+          temp += 1L; // 普通写操作
+          set(temp); // 调用已同步的写方法
+      }
+      public synchronized long get() { // 对单个的普通变量的读用同一个锁同步
+      	return vl;
+      }
+  }
+  ```
+
+  - 可见性。对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入。
+  - 原子性：对任意单个volatile变量的读/写具有原子性，但类似于volatile++这种复合操作不具有原子性。
+
+- volatile写-读建立的happens-before关系
+
+  ```java
+  class VolatileExample {
+      int a = 0;
+      volatile boolean flag = false;
+      public void writer() {
+          a = 1; // 1
+          flag = true; // 2
+      }
+      public void reader() {
+          if (flag) { // 3
+              int i = a; // 4
+              ……
+      	}
+      }
+  }
+  ```
+
+  假设线程A执行writer()方法之后，线程B执行reader()方法。根据happens-before规则，这个过程建立的happens-before关系可以分为3类：
+  1）根据程序次序规则，1 happens-before 2；3 happens-before 4。
+  2）根据volatile规则，2 happens-before 3。
+  3）根据happens-before的传递性规则，1 happens-before 4。
+
+  这里A线程写一个volatile变量后（flag），B线程读同一个volatile变量（flag）。A线程在写volatile变量之
+  前所有可见的共享变量（a），在B线程读同一个volatile变量后（flag），将立即变得对B线程可见（a）。
+
+  在JSR-133之前的旧Java内存模型中，虽然不允许volatile变量之间重排序，但旧的Java内存模型允许volatile变量与普通变量重排序。在旧的内存模型中，当1和2之间没有数据依赖关系时，1和2之间就可能被重排序（3和4类似）。其结果就是：读线程B执行4时，不一定能看到写线程A在执行1时对共享变量的修改。
+
+  JSR-133专家组决定增强volatile的内存语义：严格限制编译器和处理器对volatile变量与普通变量的重排序，确保volatile的写-读和锁的释放-获取具有相同的内存语义。从编译器重排序规则和处理器内存屏障插入策略来看，只要volatile变量与普通变量之间的重排序可能会破坏volatile的内存语义，这种重排序就会被编译器重排
+  序规则和处理器内存屏障插入策略禁止。
+
+  从JSR-133开始（即从JDK5开始），volatile变量的写-读可以实现线程之间的通信。从内存语义的角度来说，volatile的写-读与锁的释放-获取有相同的内存效果：volatile写和锁的释放有相同的内存语义；volatile读与锁的获取有相同的内存语义。
+
+- volatile写-读的内存语义
+
+  volatile写的内存语义如下。当写一个volatile变量时，JMM会把该线程对应的本地内存中的共享变量值刷新到主内存。
+
+  volatile读的内存语义如下。当读一个volatile变量时，JMM会把该线程对应的本地内存置为无效。线程接下来将从主内存中读取共享变量。
+
+- volatile内存语义的实现
+
+  <img src="img/java并发/重排序规则.PNG" style="zoom: 50%;" />
+
+  - 当第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。这个规则确保volatile写之前的操作不会被编译器重排序到volatile写之后（因为volatile写会把该线程对应的本地内存中的共享变量值刷新到主内存）。
+  - 当第一个操作是volatile读时，不管第二个操作是什么，都不能重排序。这个规则确保volatile读之后的操作不会被编译器重排序到volatile读之前（因为volatile读会把该线程对应的本地内存置为无效。线程接下来将从主内存中读取共享变量。重排序的话就可能从缓存中读取旧值）。
+  - 当第一个操作是volatile写，第二个操作是volatile读时，不能重排序。
+
+  为了实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入内存屏障来禁止特定类型的处理器重排序。下面是基于保守策略的JMM内存屏障插入策略。
+
+  - 在每个volatile写操作的前面插入一个StoreStore屏障。
+  - 在每个volatile写操作的后面插入一个StoreLoad屏障。
+  - 在每个volatile读操作的后面插入一个LoadLoad屏障。
+  - 在每个volatile读操作的后面插入一个LoadStore屏障。
+
+##### 3.5 锁的内存语义
+
+- 锁的释放-获取建立的happens-before关系
+
+  ```java
+  class MonitorExample {
+      int a = 0;
+      public synchronized void writer() { // 1
+      	a++; // 2
+      } // 3
+      public synchronized void reader() { // 4
+          int i = a; // 5
+          ……
+      } // 6
+  }
+  ```
+
+  假设线程A执行writer()方法，随后线程B执行reader()方法。根据happens-before规则，这个过程包含的happens-before关系可以分为3类。
+  1）根据程序次序规则，1 happens-before 2，2 happens-before 3；4 happens-before 5，5 happens-before 6。
+  2）根据监视器锁规则，3 happens-before 4。
+  3）根据happens-before的传递性，2 happens-before 5。
+
+- 锁的释放和获取的内存语义
+
+  当线程释放锁时，JMM会把该线程对应的本地内存中的共享变量刷新到主内存中。
+
+  当线程获取锁时，JMM会把该线程对应的本地内存置为无效。从而使得被监视器保护的临界区代码必须从主内存中读取共享变量。
+
+  对比锁释放-获取的内存语义与volatile写-读的内存语义可以看出：锁释放与volatile写有相同的内存语义；锁获取与volatile读有相同的内存语义。
+
+- 锁内存语义的实现
+
+  ```JAVA
+  class ReentrantLockExample {
+      int a = 0;
+      ReentrantLock lock = new ReentrantLock();
+      public void writer() {
+          lock.lock(); // 获取锁
+          try {
+          	a++;
+          } finally {
+          	lock.unlock(); // 释放锁
+          }
+      }
+      public void reader () {
+          lock.lock(); // 获取锁
+          try {
+          	int i = a;
+          	……
+          } finally {
+          	lock.unlock(); // 释放锁
+          }
+      }
+  }
+  
+  ```
+
+  在ReentrantLock中，调用lock()方法获取锁；调用unlock()方法释放锁。ReentrantLock的实现依赖于Java同步器框架AbstractQueuedSynchronizer。AQS使用一个整型的volatile变量（命名为state）来维护同步状态。
+
+  <img src="img/java并发/ReentrantLock的类图.PNG" style="zoom:50%;" />
+
+  使用公平锁时，加锁方法lock()调用轨迹如下。
+  1）ReentrantLock:lock()。
+  2）FairSync:lock()。
+  3）AbstractQueuedSynchronizer:acquire(int arg)。
+  4）ReentrantLock:tryAcquire(int acquires)。
+  
+  使用公平锁时，解锁方法unlock()调用轨迹如下。
+  1）ReentrantLock:unlock()。
+  2）AbstractQueuedSynchronizer:release(int arg)。
+  3）Sync:tryRelease(int releases)。
+  
+  使用非公平锁时，加锁方法lock()调用轨迹如下。
+  1）ReentrantLock:lock()。
+  2）NonfairSync:lock()。
+  3）AbstractQueuedSynchronizer:compareAndSetState(int expect,int update)。
+  
+  - 公平锁和非公平锁释放时，最后都要写一个volatile变量state。
+  - 公平锁获取时，首先会去读volatile变量。
+  - 非公平锁获取时，首先会用CAS更新volatile变量（更新成功的线程获取锁），这个操作同时具有volatile读和volatile写的内存语义。
+
+- concurrent包的实现
+
+  由于Java的CAS同时具有volatile读和volatile写的内存语义，因此Java线程之间的通信现在有了下面4种方式。
+  1）A线程写volatile变量，随后B线程读这个volatile变量。
+  2）A线程写volatile变量，随后B线程用CAS更新这个volatile变量。
+  3）A线程用CAS更新一个volatile变量，随后B线程用CAS更新这个volatile变量。
+  4）A线程用CAS更新一个volatile变量，随后B线程读这个volatile变量。
+
+  concurrent包的通用化的实现模式。首先，声明共享变量为volatile。然后，使用CAS的原子条件更新来实现线程之间的同步。同时，配合以volatile的读/写和CAS所具有的volatile读和写的内存语义来实现线程之间的
+  通信。
+
+  <img src="img/java并发/concurrent包的实现.PNG" style="zoom:50%;" />
+
